@@ -1,0 +1,38 @@
+// Prisma schema for CV Tailor
+// Database: Railway PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// App user, linked 1:1 to a Clerk account.
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  resumes Resume[]
+}
+
+/// A master resume uploaded by the user. `data` holds the parsed,
+/// structured representation (the data-слой) produced from the source file.
+model Resume {
+  id           String   @id @default(cuid())
+  userId       String
+  title        String   @default("Моё резюме")
+  originalText String?  @db.Text
+  data         Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}

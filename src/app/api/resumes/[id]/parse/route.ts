@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
 import { getOrCreateUser } from "@/lib/user";
 import { prisma } from "@/lib/prisma";
-import { parseResumeText } from "@/lib/anthropic";
+import { parseResumeText } from "@/lib/llm";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,6 +14,13 @@ export async function POST(
   const user = await getOrCreateUser();
   if (!user) {
     return NextResponse.json({ error: "Не авторизованы." }, { status: 401 });
+  }
+
+  if (!process.env.GEMINI_API_KEY) {
+    return NextResponse.json(
+      { error: "ИИ-сервис не настроен (нет ключа GEMINI_API_KEY)." },
+      { status: 503 },
+    );
   }
 
   const resume = await prisma.resume.findFirst({
@@ -40,15 +46,10 @@ export async function POST(
     return NextResponse.json({ data });
   } catch (err) {
     console.error("[resumes/parse] failed:", err);
-    if (err instanceof Anthropic.AuthenticationError) {
+    const msg = err instanceof Error ? err.message : "";
+    if (/429|quota|rate/i.test(msg)) {
       return NextResponse.json(
-        { error: "ИИ-сервис не настроен (нет ключа). Зайдите позже." },
-        { status: 503 },
-      );
-    }
-    if (err instanceof Anthropic.RateLimitError) {
-      return NextResponse.json(
-        { error: "Слишком много запросов к ИИ. Попробуйте через минуту." },
+        { error: "Лимит бесплатного тира исчерпан. Попробуйте через минуту." },
         { status: 429 },
       );
     }

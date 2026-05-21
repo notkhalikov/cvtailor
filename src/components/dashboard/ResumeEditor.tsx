@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { forwardRef, useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type {
   ResumeData,
@@ -251,22 +251,10 @@ export default function ResumeEditor({
                   />
                 </div>
                 <div className="mt-3 flex flex-col gap-1.5">
-                  <Label>Достижения (по одному на строку)</Label>
-                  <textarea
-                    className={`${inputCls} min-h-[88px] resize-y leading-relaxed`}
-                    value={exp.bullets.join("\n")}
-                    placeholder="• Запустил…&#10;• Сократил…"
-                    onChange={(e) =>
-                      patchExperience(i, {
-                        bullets: e.target.value
-                          .split("\n")
-                          .map((b) => b.replace(/^[•\-\s]+/, "").trimEnd())
-                          .filter((b, idx, arr) =>
-                            // keep non-empty, but allow a trailing blank line while typing
-                            b !== "" || idx === arr.length - 1,
-                          ),
-                      })
-                    }
+                  <Label>Достижения</Label>
+                  <BulletList
+                    bullets={exp.bullets}
+                    onChange={(bullets) => patchExperience(i, { bullets })}
                   />
                 </div>
               </div>
@@ -376,6 +364,132 @@ export default function ResumeEditor({
     </section>
   );
 }
+
+function BulletList({
+  bullets,
+  onChange,
+}: {
+  bullets: string[];
+  onChange: (next: string[]) => void;
+}) {
+  const refs = useRef<(HTMLTextAreaElement | null)[]>([]);
+  const [focusIdx, setFocusIdx] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (focusIdx === null) return;
+    const el = refs.current[focusIdx];
+    if (el) {
+      el.focus();
+      const len = el.value.length;
+      el.setSelectionRange(len, len);
+    }
+    setFocusIdx(null);
+  }, [focusIdx, bullets.length]);
+
+  function setAt(i: number, value: string) {
+    onChange(bullets.map((b, j) => (j === i ? value : b)));
+  }
+  function insertAfter(i: number) {
+    const next = [...bullets];
+    next.splice(i + 1, 0, "");
+    onChange(next);
+    setFocusIdx(i + 1);
+  }
+  function removeAt(i: number) {
+    onChange(bullets.filter((_, j) => j !== i));
+    setFocusIdx(Math.max(0, i - 1));
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      {bullets.map((b, i) => (
+        <div key={i} className="group flex items-start gap-2">
+          <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400/70" />
+          <AutoTextarea
+            ref={(el) => {
+              refs.current[i] = el;
+            }}
+            value={b}
+            placeholder="Достижение или обязанность"
+            onChange={(v) => setAt(i, v)}
+            onEnter={() => insertAfter(i)}
+            onBackspaceEmpty={() => {
+              if (bullets.length > 1 || b !== "") removeAt(i);
+            }}
+          />
+          <button
+            onClick={() => removeAt(i)}
+            aria-label="Удалить пункт"
+            className="mt-1 shrink-0 rounded-md p-1 text-zinc-600 opacity-0 transition-opacity hover:text-rose-400 group-hover:opacity-100"
+          >
+            <XIcon className="h-4 w-4" />
+          </button>
+        </div>
+      ))}
+      <button
+        onClick={() => {
+          onChange([...bullets, ""]);
+          setFocusIdx(bullets.length);
+        }}
+        className="mt-1 inline-flex w-fit items-center gap-1 font-mono text-[11px] uppercase tracking-[0.12em] text-zinc-500 transition-colors hover:text-emerald-400"
+      >
+        <PlusIcon className="h-3.5 w-3.5" />
+        Добавить пункт
+      </button>
+    </div>
+  );
+}
+
+const AutoTextarea = forwardRef<
+  HTMLTextAreaElement,
+  {
+    value: string;
+    placeholder?: string;
+    onChange: (v: string) => void;
+    onEnter: () => void;
+    onBackspaceEmpty: () => void;
+  }
+>(function AutoTextarea(
+  { value, placeholder, onChange, onEnter, onBackspaceEmpty },
+  ref,
+) {
+  const innerRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useLayoutEffect(() => {
+    const el = innerRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [value]);
+
+  return (
+    <textarea
+      ref={(el) => {
+        innerRef.current = el;
+        if (typeof ref === "function") ref(el);
+        else if (ref) ref.current = el;
+      }}
+      rows={1}
+      value={value}
+      placeholder={placeholder}
+      onChange={(e) => onChange(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          onEnter();
+        } else if (
+          e.key === "Backspace" &&
+          e.currentTarget.selectionStart === 0 &&
+          e.currentTarget.selectionEnd === 0
+        ) {
+          e.preventDefault();
+          onBackspaceEmpty();
+        }
+      }}
+      className={`${inputCls} resize-none overflow-hidden py-1.5 leading-relaxed`}
+    />
+  );
+});
 
 function Block({
   title,

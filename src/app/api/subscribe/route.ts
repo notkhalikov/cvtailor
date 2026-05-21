@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getResend, AUDIENCE_ID } from "@/lib/resend";
+import { getResend, resolveAudienceId } from "@/lib/resend";
 
 // Simple, pragmatic email check — good enough for a waitlist form.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -17,9 +17,18 @@ export async function POST(request: Request) {
   }
 
   const resend = getResend();
-  if (!resend || !AUDIENCE_ID) {
-    // Keys not configured yet — log so nothing is silently lost in dev.
-    console.warn("[subscribe] RESEND_API_KEY/RESEND_AUDIENCE_ID not set; email not stored:", email);
+  if (!resend) {
+    // Key not configured yet — log so nothing is silently lost in dev.
+    console.warn("[subscribe] RESEND_API_KEY not set; email not stored:", email);
+    return NextResponse.json(
+      { error: "Подписка временно недоступна. Попробуйте позже." },
+      { status: 503 },
+    );
+  }
+
+  const audienceId = await resolveAudienceId(resend);
+  if (!audienceId) {
+    console.error("[subscribe] Could not resolve a Resend audience");
     return NextResponse.json(
       { error: "Подписка временно недоступна. Попробуйте позже." },
       { status: 503 },
@@ -28,7 +37,7 @@ export async function POST(request: Request) {
 
   const { error } = await resend.contacts.create({
     email: email.trim().toLowerCase(),
-    audienceId: AUDIENCE_ID,
+    audienceId,
     unsubscribed: false,
   });
 

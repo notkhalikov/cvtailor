@@ -10,4 +10,26 @@ export function getResend(): Resend | null {
   return new Resend(apiKey);
 }
 
-export const AUDIENCE_ID = process.env.RESEND_AUDIENCE_ID;
+// Cache the resolved audience id across invocations (per warm lambda).
+let cachedAudienceId: string | null = null;
+
+/**
+ * Resolves the Resend Audience to add contacts to.
+ *
+ * Prefers RESEND_AUDIENCE_ID when set; otherwise falls back to the account's
+ * first audience (Resend creates a default "General" audience on signup), so
+ * the only secret you must configure is RESEND_API_KEY.
+ *
+ * Returns null if no audience can be determined.
+ */
+export async function resolveAudienceId(resend: Resend): Promise<string | null> {
+  const fromEnv = process.env.RESEND_AUDIENCE_ID;
+  if (fromEnv) return fromEnv;
+  if (cachedAudienceId) return cachedAudienceId;
+
+  const { data, error } = await resend.audiences.list();
+  if (error || !data?.data?.length) return null;
+
+  cachedAudienceId = data.data[0].id;
+  return cachedAudienceId;
+}

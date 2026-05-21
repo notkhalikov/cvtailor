@@ -38,16 +38,23 @@ export default function SubscribeForm() {
 
   if (status === "success") {
     return (
-      <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-5 py-4 text-center text-emerald-300">
+      <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-5 py-4 text-emerald-300">
         {message}
       </p>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full">
+    <form onSubmit={handleSubmit} className="flex w-full flex-col gap-2">
+      <label
+        htmlFor="subscribe-email"
+        className="font-mono text-xs uppercase tracking-[0.14em] text-zinc-500"
+      >
+        Ранний доступ
+      </label>
       <div className="flex flex-col gap-3 sm:flex-row">
         <input
+          id="subscribe-email"
           type="email"
           required
           value={email}
@@ -55,20 +62,20 @@ export default function SubscribeForm() {
           placeholder="you@example.com"
           autoComplete="email"
           disabled={status === "loading"}
-          className="flex-1 rounded-xl border border-white/15 bg-white/5 px-5 py-3.5 text-base text-white placeholder:text-white/40 outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-500/30 disabled:opacity-60"
+          className="flex-1 rounded-xl border border-zinc-800 bg-zinc-900/50 px-5 py-3.5 text-base text-zinc-50 placeholder:text-zinc-500 outline-none transition-colors focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-60"
         />
         <button
           type="submit"
           disabled={status === "loading"}
-          className="rounded-xl bg-violet-600 px-6 py-3.5 text-base font-semibold text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-xl bg-emerald-500 px-6 py-3.5 text-base font-semibold text-zinc-950 transition-all hover:bg-emerald-400 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {status === "loading" ? "Отправляем…" : "Получить ранний доступ"}
+          {status === "loading" ? "Отправляем…" : "Получить доступ"}
         </button>
       </div>
       {status === "error" && (
-        <p className="mt-3 text-sm text-rose-400">{message}</p>
+        <p className="text-sm text-rose-400">{message}</p>
       )}
-      <p className="mt-3 text-sm text-white/40">
+      <p className="text-sm text-zinc-500">
         Без спама. Одно письмо — когда откроем доступ.
       </p>
     </form>

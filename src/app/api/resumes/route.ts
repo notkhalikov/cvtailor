@@ -48,7 +48,8 @@ export async function POST(req: Request) {
   let text: string;
   try {
     ({ text } = await extractPdfText(buffer));
-  } catch {
+  } catch (err) {
+    console.error("[resumes] PDF extraction failed:", err);
     return NextResponse.json(
       { error: "Не удалось прочитать PDF. Попробуйте другой файл." },
       { status: 422 },

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Link from "next/link";
 import type { ResumeData } from "@/lib/resume-schema";
 
 export type ResumeItem = {
@@ -221,6 +222,14 @@ export default function ResumeManager({
                       >
                         {parsing ? "Разбираем…" : "Разобрать"}
                       </button>
+                    )}
+                    {r.data && (
+                      <Link
+                        href={`/dashboard/resume/${r.id}`}
+                        className="rounded-lg border border-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:border-emerald-500/40 hover:text-emerald-400"
+                      >
+                        Редактировать
+                      </Link>
                     )}
                     {r.data && (
                       <button

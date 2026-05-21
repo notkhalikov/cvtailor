@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import { currentUser } from "@clerk/nextjs/server";
+import { getOrCreateUser } from "@/lib/user";
 import DashboardNav from "@/components/dashboard/DashboardNav";
 
 export const dynamic = "force-dynamic";
@@ -10,6 +12,11 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const dbUser = await getOrCreateUser();
+  if (dbUser && !dbUser.onboardedAt) {
+    redirect("/onboarding");
+  }
+
   const user = await currentUser();
   const email = user?.emailAddresses[0]?.emailAddress ?? "";
   const name = user?.firstName ?? email.split("@")[0] ?? "пользователь";

@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import SubscribeForm from "@/components/SubscribeForm";
 
 const FEATURES = [
@@ -23,6 +25,35 @@ export default function Home() {
         aria-hidden
         className="pointer-events-none absolute left-1/2 top-[-10%] h-[480px] w-[480px] -translate-x-1/2 rounded-full bg-violet-600/25 blur-[120px]"
       />
+
+      <header className="relative z-10 mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
+        <span className="font-bold tracking-tight">CV Tailor</span>
+        <nav className="flex items-center gap-3 text-sm">
+          <SignedOut>
+            <Link
+              href="/sign-in"
+              className="rounded-lg px-4 py-2 text-white/70 transition hover:text-white"
+            >
+              Войти
+            </Link>
+            <Link
+              href="/sign-up"
+              className="rounded-lg bg-white/10 px-4 py-2 font-medium text-white transition hover:bg-white/20"
+            >
+              Регистрация
+            </Link>
+          </SignedOut>
+          <SignedIn>
+            <Link
+              href="/dashboard"
+              className="rounded-lg px-4 py-2 text-white/70 transition hover:text-white"
+            >
+              Кабинет
+            </Link>
+            <UserButton afterSignOutUrl="/" />
+          </SignedIn>
+        </nav>
+      </header>
 
       <section className="relative mx-auto flex max-w-3xl flex-col items-center px-6 pb-24 pt-28 text-center">
         <span className="mb-6 inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-sm text-white/70">

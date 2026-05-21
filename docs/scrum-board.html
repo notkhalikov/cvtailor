@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CV Tailor — Scrum Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #0a0a0f;
+  --s1:       #111118;
+  --s2:       #18181f;
+  --s3:       #222230;
+  --border:   #2a2a3a;
+  --border2:  #3a3a50;
+  --text:     #e8e8f2;
+  --muted:    #5a5a7a;
+  --muted2:   #8888aa;
+  --accent:   #6c5ce7;
+  --accentL:  #a89df5;
+  --teal:     #00cec9;
+  --green:    #00b894;
+  --orange:   #e17055;
+  --red:      #d63031;
+  --yellow:   #fdcb6e;
+  --pink:     #e84393;
+}
+
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── TOPBAR ─────────────────────────────────────────────── */
+.topbar {
+  height: 52px;
+  background: var(--s1);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 0;
+  flex-shrink: 0;
+  position: relative;
+}
+.logo {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text);
+  margin-right: 8px;
+}
+.logo span { color: var(--accent); }
+.logo-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-right: 32px;
+  padding-left: 12px;
+  border-left: 1px solid var(--border2);
+}
+.nav {
+  display: flex;
+  height: 100%;
+  gap: 2px;
+}
+.nav-btn {
+  height: 100%;
+  padding: 0 18px;
+  background: transparent;
+  border: none;
+  color: var(--muted2);
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  position: relative;
+  transition: color 0.15s;
+}
+.nav-btn:hover { color: var(--text); }
+.nav-btn.active { color: var(--text); }
+.nav-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--accent);
+}
+.topbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sprint-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 4px 10px;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: 2px;
+  letter-spacing: 0.05em;
+}
+.progress-ring {
+  width: 32px; height: 32px;
+  position: relative;
+}
+.progress-ring svg { transform: rotate(-90deg); }
+.progress-ring .track { fill: none; stroke: var(--s3); stroke-width: 3; }
+.progress-ring .fill { fill: none; stroke: var(--green); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 82; transition: stroke-dashoffset 0.5s ease; }
+.progress-ring .label {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; font-weight: 500;
+  color: var(--green);
+}
+
+/* ── LAYOUT ─────────────────────────────────────────────── */
+.app {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ── LEFT SIDEBAR ────────────────────────────────────────── */
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--s1);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.sidebar-section { padding: 16px 16px 8px; }
+.sidebar-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.sprint-item {
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.12s;
+  margin-bottom: 2px;
+  border: 1px solid transparent;
+}
+.sprint-item:hover { background: var(--s2); }
+.sprint-item.active { background: var(--s2); border-color: var(--border); }
+.sprint-item .si-name { font-size: 12px; font-weight: 600; }
+.sprint-item .si-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; color: var(--muted); margin-top: 2px;
+}
+.sprint-phase {
+  display: inline-block;
+  font-size: 8px;
+  padding: 1px 6px;
+  border-radius: 2px;
+  font-weight: 600;
+  margin-top: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.08em;
+}
+.phase-0 { background: rgba(90,90,122,0.3); color: var(--muted2); }
+.phase-1 { background: rgba(108,92,231,0.2); color: var(--accentL); }
+.phase-2 { background: rgba(0,206,201,0.15); color: var(--teal); }
+.phase-3 { background: rgba(0,184,148,0.15); color: var(--green); }
+.phase-4 { background: rgba(253,203,110,0.15); color: var(--yellow); }
+
+.mini-bar {
+  height: 3px;
+  background: var(--s3);
+  border-radius: 2px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+.mini-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--accent);
+  transition: width 0.4s ease;
+}
+
+/* ── MAIN ───────────────────────────────────────────────── */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── SPRINT HEADER ──────────────────────────────────────── */
+.sprint-header {
+  padding: 20px 28px 0;
+  flex-shrink: 0;
+}
+.sh-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.sh-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.sh-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+.sh-goal {
+  font-size: 13px;
+  color: var(--muted2);
+  margin-top: 4px;
+  font-weight: 400;
+}
+.sh-stats {
+  margin-left: auto;
+  display: flex;
+  gap: 16px;
+  flex-shrink: 0;
+}
+.stat-box {
+  text-align: center;
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 14px;
+}
+.stat-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1;
+}
+.stat-label {
+  font-size: 9px;
+  color: var(--muted);
+  margin-top: 3px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ── KANBAN ─────────────────────────────────────────────── */
+.kanban {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+  overflow: hidden;
+  margin-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.col {
+  background: var(--s1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.col-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  background: var(--s2);
+}
+.col-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.col-name {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.col-count {
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  background: var(--s3);
+  padding: 1px 7px;
+  border-radius: 8px;
+}
+.col-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ── TASK CARD ──────────────────────────────────────────── */
+.task-card {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: border-color 0.12s, transform 0.1s;
+  position: relative;
+}
+.task-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+.task-card.done { opacity: 0.55; }
+.task-left-bar {
+  position: absolute;
+  left: 0; top: 8px; bottom: 8px;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+}
+.task-type {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.task-title {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.task-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.task-pts {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  background: var(--s3);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+.task-tag {
+  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+}
+.tag-fe { background: rgba(108,92,231,0.2); color: var(--accentL); }
+.tag-be { background: rgba(0,206,201,0.15); color: var(--teal); }
+.tag-ai { background: rgba(232,67,147,0.15); color: var(--pink); }
+.tag-design { background: rgba(253,203,110,0.15); color: var(--yellow); }
+.tag-infra { background: rgba(0,184,148,0.15); color: var(--green); }
+.tag-biz { background: rgba(225,112,85,0.2); color: var(--orange); }
+
+/* move buttons on card hover */
+.task-actions {
+  display: flex;
+  gap: 3px;
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.task-card:hover .task-actions { opacity: 1; }
+.move-btn {
+  width: 20px; height: 20px;
+  border-radius: 3px;
+  border: 1px solid var(--border2);
+  background: var(--s3);
+  color: var(--muted2);
+  font-size: 9px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.1s;
+}
+.move-btn:hover { background: var(--accent); border-color: var(--accent); color: white; }
+
+/* ── DIARY PANEL ────────────────────────────────────────── */
+.diary-panel {
+  width: 280px;
+  flex-shrink: 0;
+  background: var(--s1);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.dp-header {
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--s2);
+  flex-shrink: 0;
+}
+.dp-title {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.dp-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+.dp-input-area {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.dp-textarea {
+  width: 100%;
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 10px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  resize: none;
+  outline: none;
+  transition: border-color 0.15s;
+  height: 80px;
+}
+.dp-textarea:focus { border-color: var(--accent); }
+.dp-textarea::placeholder { color: var(--muted); }
+.dp-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+.dp-type-sel {
+  flex: 1;
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 4px 6px;
+  outline: none;
+  cursor: pointer;
+}
+.dp-submit {
+  padding: 5px 14px;
+  background: var(--accent);
+  border: none;
+  border-radius: 3px;
+  color: white;
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.dp-submit:hover { opacity: 0.85; }
+
+.dp-entries {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.entry {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 8px 10px;
+  border-left: 3px solid;
+  animation: slideIn 0.2s ease;
+}
+@keyframes slideIn { from { opacity: 0; transform: translateX(8px); } to { opacity: 1; transform: none; } }
+.entry-daily { border-left-color: var(--accent); }
+.entry-blocker { border-left-color: var(--red); }
+.entry-done { border-left-color: var(--green); }
+.entry-idea { border-left-color: var(--yellow); }
+.entry-note { border-left-color: var(--muted); }
+.entry-header {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.entry-type-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+.entry-time {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  color: var(--muted);
+  margin-left: auto;
+}
+.entry-sprint-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  color: var(--muted2);
+  background: var(--s3);
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+.entry-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted2);
+  line-height: 1.6;
+}
+
+/* ── SCROLLBAR ──────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* ── TABS CONTENT ────────────────────────────────────────── */
+.tab-content { display: none; }
+.tab-content.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+/* ── VELOCITY CHART ─────────────────────────────────────── */
+.velocity-view {
+  padding: 24px 28px;
+  overflow-y: auto;
+  flex: 1;
+}
+.vc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.vc-card {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+}
+.vc-card-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  margin-bottom: 12px;
+}
+.big-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 42px;
+  font-weight: 500;
+  line-height: 1;
+}
+.big-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+.burndown {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.bd-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 80px;
+  margin-top: 12px;
+}
+.bd-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.bd-bar {
+  width: 100%;
+  border-radius: 3px 3px 0 0;
+  min-height: 4px;
+  transition: height 0.4s ease;
+}
+.bd-bar-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  color: var(--muted);
+}
+
+/* ── TASK ADD MODAL ─────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--s2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 24px;
+  width: 440px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  animation: popIn 0.15s ease;
+}
+@keyframes popIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }
+.modal h3 { font-size: 16px; font-weight: 800; margin-bottom: 16px; }
+.modal-field { margin-bottom: 12px; }
+.modal-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+.modal-input, .modal-select, .modal-textarea {
+  width: 100%;
+  background: var(--s3);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 8px 12px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.modal-input:focus, .modal-select:focus, .modal-textarea:focus { border-color: var(--accent); }
+.modal-textarea { resize: vertical; height: 60px; }
+.modal-row { display: flex; gap: 10px; }
+.modal-row .modal-field { flex: 1; }
+.modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.modal-cancel {
+  padding: 8px 18px;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  color: var(--muted2);
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+}
+.modal-save {
+  padding: 8px 20px;
+  background: var(--accent);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.modal-save:hover { opacity: 0.88; }
+
+/* add task btn */
+.add-task-btn {
+  width: 100%;
+  padding: 7px;
+  background: transparent;
+  border: 1px dashed var(--border2);
+  border-radius: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  cursor: pointer;
+  font-family: 'Syne', sans-serif;
+  transition: all 0.15s;
+  margin-top: 2px;
+}
+.add-task-btn:hover { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">CV<span>·</span>Tailor</div>
+  <div class="logo-sub">Scrum Board</div>
+  <div class="nav">
+    <button class="nav-btn active" onclick="switchTab('board', this)">Доска</button>
+    <button class="nav-btn" onclick="switchTab('velocity', this)">Прогресс</button>
+  </div>
+  <div class="topbar-right">
+    <div class="sprint-badge" id="activeBadge">Sprint 1 · Active</div>
+    <div class="progress-ring">
+      <svg viewBox="0 0 32 32" width="32" height="32">
+        <circle class="track" cx="16" cy="16" r="13"/>
+        <circle class="fill" id="progressRing" cx="16" cy="16" r="13" stroke-dashoffset="82"/>
+      </svg>
+      <div class="label" id="progressLabel">0%</div>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Спринты</div>
+      <div id="sprintList"></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- BOARD TAB -->
+    <div class="tab-content active" id="tab-board">
+      <div class="sprint-header">
+        <div class="sh-top">
+          <div>
+            <div class="sh-num" id="sprintNum">SPRINT 1 · 2 НЕДЕЛИ</div>
+            <div class="sh-title" id="sprintTitle">Валидация</div>
+            <div class="sh-goal" id="sprintGoal">Landing + email-лист + прототип + 20 ручных тестов</div>
+          </div>
+          <div class="sh-stats">
+            <div class="stat-box">
+              <div class="stat-num" id="statTotal" style="color:var(--accentL)">0</div>
+              <div class="stat-label">Всего</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-num" id="statDone" style="color:var(--green)">0</div>
+              <div class="stat-label">Готово</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-num" id="statPts" style="color:var(--orange)">0</div>
+              <div class="stat-label">SP</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="kanban">
+        <div class="col">
+          <div class="col-header">
+            <div class="col-dot" style="background:#5a5a7a"></div>
+            <div class="col-name">Backlog</div>
+            <div class="col-count" id="cnt-backlog">0</div>
+          </div>
+          <div class="col-body" id="col-backlog">
+            <button class="add-task-btn" onclick="openAddModal('backlog')">+ Задача</button>
+          </div>
+        </div>
+        <div class="col">
+          <div class="col-header">
+            <div class="col-dot" style="background:#6c5ce7"></div>
+            <div class="col-name">In Progress</div>
+            <div class="col-count" id="cnt-inprogress">0</div>
+          </div>
+          <div class="col-body" id="col-inprogress">
+            <button class="add-task-btn" onclick="openAddModal('inprogress')">+ Задача</button>
+          </div>
+        </div>
+        <div class="col">
+          <div class="col-header">
+            <div class="col-dot" style="background:#fdcb6e"></div>
+            <div class="col-name">Review</div>
+            <div class="col-count" id="cnt-review">0</div>
+          </div>
+          <div class="col-body" id="col-review">
+            <button class="add-task-btn" onclick="openAddModal('review')">+ Задача</button>
+          </div>
+        </div>
+        <div class="col">
+          <div class="col-header">
+            <div class="col-dot" style="background:#00b894"></div>
+            <div class="col-name">Done</div>
+            <div class="col-count" id="cnt-done">0</div>
+          </div>
+          <div class="col-body" id="col-done">
+            <button class="add-task-btn" onclick="openAddModal('done')">+ Задача</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VELOCITY TAB -->
+    <div class="tab-content" id="tab-velocity">
+      <div class="velocity-view">
+        <div class="vc-grid">
+          <div class="vc-card">
+            <div class="vc-card-title">Всего задач</div>
+            <div class="big-num" id="v-total" style="color:var(--accentL)">0</div>
+            <div class="big-sub">по всем спринтам</div>
+          </div>
+          <div class="vc-card">
+            <div class="vc-card-title">Завершено</div>
+            <div class="big-num" id="v-done" style="color:var(--green)">0</div>
+            <div class="big-sub" id="v-pct">— % прогресс</div>
+          </div>
+          <div class="vc-card">
+            <div class="vc-card-title">Story Points (done)</div>
+            <div class="big-num" id="v-sp" style="color:var(--orange)">0</div>
+            <div class="big-sub">из <span id="v-sp-total">0</span> SP</div>
+          </div>
+          <div class="vc-card">
+            <div class="vc-card-title">Записей в дневнике</div>
+            <div class="big-num" id="v-diary" style="color:var(--teal)">0</div>
+            <div class="big-sub">заметок и логов</div>
+          </div>
+        </div>
+        <div class="burndown">
+          <div class="vc-card-title">Прогресс по спринтам</div>
+          <div class="bd-bars" id="burndownBars"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- DIARY PANEL -->
+  <div class="diary-panel">
+    <div class="dp-header">
+      <div class="dp-title">📓 Sprint Diary</div>
+      <div class="dp-sub" id="diaryDate"></div>
+    </div>
+    <div class="dp-input-area">
+      <textarea class="dp-textarea" id="diaryInput" placeholder="Что сделано? Блокеры? Идеи?"></textarea>
+      <div class="dp-actions">
+        <select class="dp-type-sel" id="diaryType">
+          <option value="daily">📅 Daily</option>
+          <option value="done">✅ Выполнено</option>
+          <option value="blocker">🚧 Блокер</option>
+          <option value="idea">💡 Идея</option>
+          <option value="note">📝 Заметка</option>
+        </select>
+        <button class="dp-submit" onclick="addDiaryEntry()">Добавить</button>
+      </div>
+    </div>
+    <div class="dp-entries" id="diaryEntries"></div>
+  </div>
+</div>
+
+<!-- ADD TASK MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <h3>Новая задача</h3>
+    <div class="modal-field">
+      <div class="modal-label">Название</div>
+      <input class="modal-input" id="newTaskTitle" placeholder="Что нужно сделать?">
+    </div>
+    <div class="modal-row">
+      <div class="modal-field">
+        <div class="modal-label">Тип</div>
+        <select class="modal-select" id="newTaskType">
+          <option value="feat">Feature</option>
+          <option value="fix">Bug Fix</option>
+          <option value="design">Design</option>
+          <option value="infra">Infra</option>
+          <option value="research">Research</option>
+          <option value="biz">Бизнес</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <div class="modal-label">Тег</div>
+        <select class="modal-select" id="newTaskTag">
+          <option value="fe">Frontend</option>
+          <option value="be">Backend</option>
+          <option value="ai">AI</option>
+          <option value="design">Design</option>
+          <option value="infra">Infra</option>
+          <option value="biz">Biz</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <div class="modal-label">Story Pts</div>
+        <select class="modal-select" id="newTaskPts">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3" selected>3</option>
+          <option value="5">5</option>
+          <option value="8">8</option>
+          <option value="13">13</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-cancel" onclick="closeModal()">Отмена</button>
+      <button class="modal-save" onclick="saveTask()">Добавить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════════
+
+const SPRINTS_DEFAULT = [
+  {
+    id: 0, name: "Phase 0 · Валидация", short: "Валидация",
+    duration: "2 нед", phase: 0, active: true,
+    goal: "Landing + email-лист + прототип + 20 ручных тестов",
+    tasks: [
+      { id: 1, title: "Создать landing page с email-формой", type: "feat", tag: "fe", pts: 5, status: "backlog" },
+      { id: 2, title: "Настроить домен и деплой на Vercel", type: "infra", tag: "infra", pts: 2, status: "done" },
+      { id: 3, title: "Прототип CV адаптации (текущий артефакт)", type: "feat", tag: "ai", pts: 3, status: "done" },
+      { id: 4, title: "Провести 20 ручных тестов с реальными пользователями", type: "research", tag: "biz", pts: 5, status: "backlog" },
+      { id: 5, title: "Собрать 100 email-подписок", type: "biz", tag: "biz", pts: 3, status: "backlog" },
+      { id: 6, title: "Написать продуктовый spec (готово)", type: "biz", tag: "biz", pts: 2, status: "done" },
+      { id: 7, title: "Развернуть Next.js + TypeScript окружение (app/)", type: "infra", tag: "infra", pts: 3, status: "done" },
+    ]
+  },
+  {
+    id: 1, name: "Sprint 1 · Auth + Профиль", short: "Auth + Профиль",
+    duration: "2 нед", phase: 1, active: false,
+    goal: "Авторизация, личный кабинет, загрузка мастер-резюме",
+    tasks: [
+      { id: 10, title: "Настроить Clerk auth (email + Google)", type: "feat", tag: "be", pts: 3, status: "backlog" },
+      { id: 11, title: "Создать схему БД (Supabase + Prisma)", type: "infra", tag: "infra", pts: 5, status: "backlog" },
+      { id: 12, title: "UI личного кабинета + навигация", type: "feat", tag: "fe", pts: 5, status: "backlog" },
+      { id: 13, title: "Загрузка PDF резюме + хранение", type: "feat", tag: "be", pts: 5, status: "backlog" },
+      { id: 14, title: "Парсинг PDF → data-слой (Claude API)", type: "feat", tag: "ai", pts: 8, status: "backlog" },
+      { id: 15, title: "Онбординг-флоу для нового пользователя", type: "design", tag: "design", pts: 3, status: "backlog" },
+    ]
+  },
+  {
+    id: 2, name: "Sprint 2 · Редактор", short: "Редактор блоков",
+    duration: "2 нед", phase: 1, active: false,
+    goal: "Гибридный редактор: руками + AI-промпт на каждом блоке",
+    tasks: [
+      { id: 20, title: "UI редактора блоков (Experience, Skills, Summary)", type: "feat", tag: "fe", pts: 8, status: "backlog" },
+      { id: 21, title: "Inline-редактирование буллетов руками", type: "feat", tag: "fe", pts: 5, status: "backlog" },
+      { id: 22, title: "AI-промпт на каждом блоке (streaming)", type: "feat", tag: "ai", pts: 8, status: "backlog" },
+      { id: 23, title: "Быстрые промпт-кнопки (усилить, сократить, метрики)", type: "feat", tag: "ai", pts: 3, status: "backlog" },
+      { id: 24, title: "Сохранение original_text (откат к исходнику)", type: "feat", tag: "be", pts: 3, status: "backlog" },
+      { id: 25, title: "Drag & drop сортировка позиций опыта", type: "feat", tag: "fe", pts: 3, status: "backlog" },
+    ]
+  },
+  {
+    id: 3, name: "Sprint 3 · AI-адаптация", short: "AI-адаптация",
+    duration: "2 нед", phase: 1, active: false,
+    goal: "Адаптация резюме под вакансию + gap-анализ + score",
+    tasks: [
+      { id: 30, title: "Парсинг вакансии по ссылке (Firecrawl)", type: "feat", tag: "be", pts: 5, status: "backlog" },
+      { id: 31, title: "AI-адаптация всего резюме под JD", type: "feat", tag: "ai", pts: 8, status: "backlog" },
+      { id: 32, title: "Match score (% соответствия вакансии)", type: "feat", tag: "ai", pts: 5, status: "backlog" },
+      { id: 33, title: "Gap-анализ: чего не хватает", type: "feat", tag: "ai", pts: 5, status: "backlog" },
+      { id: 34, title: "Сохранение адаптированных версий резюме", type: "feat", tag: "be", pts: 3, status: "backlog" },
+      { id: 35, title: "История версий UI", type: "feat", tag: "fe", pts: 3, status: "backlog" },
+    ]
+  },
+  {
+    id: 4, name: "Sprint 4 · PDF", short: "PDF конфигуратор",
+    duration: "2 нед", phase: 2, active: false,
+    goal: "4-5 шаблонов PDF + цветовая палитра + экспорт",
+    tasks: [
+      { id: 40, title: "Шаблон Classic (1 колонка, ATS-safe)", type: "design", tag: "design", pts: 8, status: "backlog" },
+      { id: 41, title: "Шаблон Sidebar (2 колонки)", type: "design", tag: "design", pts: 8, status: "backlog" },
+      { id: 42, title: "Шаблон Modern + Compact + Creative", type: "design", tag: "design", pts: 8, status: "backlog" },
+      { id: 43, title: "Цветовая палитра (15-20 цветов)", type: "feat", tag: "fe", pts: 3, status: "backlog" },
+      { id: 44, title: "Preview PDF в реальном времени", type: "feat", tag: "fe", pts: 5, status: "backlog" },
+      { id: 45, title: "Опции: фото, лимит страниц, ATS-режим", type: "feat", tag: "fe", pts: 5, status: "backlog" },
+      { id: 46, title: "Экспорт PDF (react-pdf)", type: "feat", tag: "be", pts: 5, status: "backlog" },
+    ]
+  },
+  {
+    id: 5, name: "Sprint 5 · Монетизация", short: "Freemium + оплата",
+    duration: "2 нед", phase: 2, active: false,
+    goal: "Free/Pro лимиты + ЮKassa интеграция + апсейл-сценарии",
+    tasks: [
+      { id: 50, title: "Логика Free-лимитов (3 адаптации/мес)", type: "feat", tag: "be", pts: 3, status: "backlog" },
+      { id: 51, title: "Пейволы и апсейл-баннеры", type: "feat", tag: "fe", pts: 5, status: "backlog" },
+      { id: 52, title: "Интеграция ЮKassa (подписка)", type: "feat", tag: "be", pts: 8, status: "backlog" },
+      { id: 53, title: "Webhook обработка платежей", type: "feat", tag: "be", pts: 5, status: "backlog" },
+      { id: 54, title: "Страница тарифов", type: "feat", tag: "fe", pts: 3, status: "backlog" },
+      { id: 55, title: "Email-уведомления (Resend)", type: "infra", tag: "infra", pts: 3, status: "backlog" },
+    ]
+  },
+  {
+    id: 6, name: "Sprint 6 · Трекер откликов", short: "Трекер откликов",
+    duration: "2 нед", phase: 2, active: false,
+    goal: "Kanban трекер откликов + аналитика поиска",
+    tasks: [
+      { id: 60, title: "Kanban доска откликов (Wishlist → Offer)", type: "feat", tag: "fe", pts: 8, status: "backlog" },
+      { id: 61, title: "Привязка версии резюме к отклику", type: "feat", tag: "be", pts: 3, status: "backlog" },
+      { id: 62, title: "Заметки и контакты по вакансии", type: "feat", tag: "fe", pts: 3, status: "backlog" },
+      { id: 63, title: "Статистика: conversion rate по этапам", type: "feat", tag: "fe", pts: 5, status: "backlog" },
+      { id: 64, title: "Напоминания (нет ответа 2 нед)", type: "feat", tag: "be", pts: 3, status: "backlog" },
+    ]
+  }
+];
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+
+async function loadState() {
+  try {
+    const r = await window.storage.get('scrum_state');
+    return r ? JSON.parse(r.value) : null;
+  } catch { return null; }
+}
+
+async function saveState() {
+  try {
+    await window.storage.set('scrum_state', JSON.stringify({ sprints, diary, activeSprintId }));
+  } catch(e) { console.log('storage:', e); }
+}
+
+let sprints = SPRINTS_DEFAULT;
+let diary = [];
+let activeSprintId = 0;
+let addModalStatus = 'backlog';
+let nextTaskId = 200;
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+
+async function init() {
+  const saved = await loadState();
+  if (saved) {
+    sprints = saved.sprints || SPRINTS_DEFAULT;
+    diary = saved.diary || [];
+    activeSprintId = saved.activeSprintId ?? 0;
+    const allIds = sprints.flatMap(s => s.tasks.map(t => t.id));
+    nextTaskId = (allIds.length ? Math.max(...allIds) : 199) + 1;
+  }
+  document.getElementById('diaryDate').textContent = new Date().toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' });
+  renderSidebar();
+  renderBoard();
+  renderDiary();
+  updateProgress();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SIDEBAR
+// ═══════════════════════════════════════════════════════════════
+
+function renderSidebar() {
+  const el = document.getElementById('sprintList');
+  el.innerHTML = sprints.map(s => {
+    const done = s.tasks.filter(t => t.status === 'done').length;
+    const pct = s.tasks.length ? Math.round(done / s.tasks.length * 100) : 0;
+    return `<div class="sprint-item ${s.id === activeSprintId ? 'active' : ''}" onclick="selectSprint(${s.id})">
+      <div class="si-name">${s.short}</div>
+      <div class="si-meta">${s.duration} · ${s.tasks.length} задач</div>
+      <span class="sprint-phase phase-${s.phase}">Phase ${s.phase}</span>
+      <div class="mini-bar"><div class="mini-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BOARD
+// ═══════════════════════════════════════════════════════════════
+
+const COLS = ['backlog', 'inprogress', 'review', 'done'];
+const NEXT = { backlog: 'inprogress', inprogress: 'review', review: 'done', done: null };
+const PREV = { backlog: null, inprogress: 'backlog', review: 'inprogress', done: 'review' };
+
+const TAG_LABELS = { fe: 'FE', be: 'BE', ai: 'AI', design: 'Design', infra: 'Infra', biz: 'Biz' };
+const TYPE_COLORS = { feat: '#6c5ce7', fix: '#d63031', design: '#fdcb6e', infra: '#00b894', research: '#00cec9', biz: '#e17055' };
+
+function renderBoard() {
+  const sprint = sprints.find(s => s.id === activeSprintId);
+  if (!sprint) return;
+
+  document.getElementById('sprintNum').textContent = `SPRINT ${sprint.id} · ${sprint.duration.toUpperCase()}`;
+  document.getElementById('sprintTitle').textContent = sprint.short;
+  document.getElementById('sprintGoal').textContent = sprint.goal;
+  document.getElementById('activeBadge').textContent = `${sprint.short} · ${sprint.active ? 'Active' : 'Planned'}`;
+
+  COLS.forEach(col => {
+    const tasks = sprint.tasks.filter(t => t.status === col);
+    document.getElementById(`cnt-${col}`).textContent = tasks.length;
+    const body = document.getElementById(`col-${col}`);
+    const btn = body.querySelector('.add-task-btn');
+    body.innerHTML = '';
+    tasks.forEach(task => body.appendChild(makeCard(task)));
+    body.appendChild(btn || makeAddBtn(col));
+  });
+
+  const total = sprint.tasks.length;
+  const done = sprint.tasks.filter(t => t.status === 'done').length;
+  const pts = sprint.tasks.reduce((a, t) => a + (t.status === 'done' ? t.pts : 0), 0);
+  const totalPts = sprint.tasks.reduce((a, t) => a + t.pts, 0);
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statDone').textContent = done;
+  document.getElementById('statPts').textContent = `${pts}/${totalPts}`;
+
+  updateProgress();
+}
+
+function makeAddBtn(col) {
+  const btn = document.createElement('button');
+  btn.className = 'add-task-btn';
+  btn.textContent = '+ Задача';
+  btn.onclick = () => openAddModal(col);
+  return btn;
+}
+
+function makeCard(task) {
+  const div = document.createElement('div');
+  div.className = `task-card ${task.status === 'done' ? 'done' : ''}`;
+  div.innerHTML = `
+    <div class="task-left-bar" style="background:${TYPE_COLORS[task.type] || '#5a5a7a'}"></div>
+    <div class="task-type">${task.type.toUpperCase()}</div>
+    <div class="task-title">${task.title}</div>
+    <div class="task-footer">
+      <span class="task-pts">${task.pts} SP</span>
+      <span class="task-tag tag-${task.tag}">${TAG_LABELS[task.tag]}</span>
+      <div class="task-actions">
+        ${PREV[task.status] ? `<button class="move-btn" onclick="moveTask(event,${task.id},'${PREV[task.status]}')">←</button>` : ''}
+        ${NEXT[task.status] ? `<button class="move-btn" onclick="moveTask(event,${task.id},'${NEXT[task.status]}')">→</button>` : ''}
+      </div>
+    </div>`;
+  return div;
+}
+
+function moveTask(e, taskId, toStatus) {
+  e.stopPropagation();
+  const sprint = sprints.find(s => s.id === activeSprintId);
+  const task = sprint.tasks.find(t => t.id === taskId);
+  if (task) { task.status = toStatus; saveState(); renderBoard(); renderSidebar(); }
+}
+
+function selectSprint(id) {
+  activeSprintId = id;
+  saveState();
+  renderSidebar();
+  renderBoard();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ADD TASK MODAL
+// ═══════════════════════════════════════════════════════════════
+
+function openAddModal(col) {
+  addModalStatus = col;
+  document.getElementById('newTaskTitle').value = '';
+  document.getElementById('addModal').classList.add('open');
+  setTimeout(() => document.getElementById('newTaskTitle').focus(), 100);
+}
+
+function closeModal() {
+  document.getElementById('addModal').classList.remove('open');
+}
+
+function saveTask() {
+  const title = document.getElementById('newTaskTitle').value.trim();
+  if (!title) return;
+  const sprint = sprints.find(s => s.id === activeSprintId);
+  sprint.tasks.push({
+    id: nextTaskId++,
+    title,
+    type: document.getElementById('newTaskType').value,
+    tag: document.getElementById('newTaskTag').value,
+    pts: parseInt(document.getElementById('newTaskPts').value),
+    status: addModalStatus
+  });
+  closeModal();
+  saveState();
+  renderBoard();
+  renderSidebar();
+}
+
+document.getElementById('addModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('addModal')) closeModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'Enter' && document.getElementById('addModal').classList.contains('open')) {
+    if (document.activeElement !== document.getElementById('newTaskTitle')) saveTask();
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// DIARY
+// ═══════════════════════════════════════════════════════════════
+
+const TYPE_META = {
+  daily:   { label: 'Daily',    color: '#6c5ce7', bg: 'rgba(108,92,231,0.15)' },
+  done:    { label: 'Done',     color: '#00b894', bg: 'rgba(0,184,148,0.15)' },
+  blocker: { label: 'Блокер',   color: '#d63031', bg: 'rgba(214,48,49,0.15)' },
+  idea:    { label: 'Идея',     color: '#fdcb6e', bg: 'rgba(253,203,110,0.15)' },
+  note:    { label: 'Заметка',  color: '#5a5a7a', bg: 'rgba(90,90,122,0.2)' },
+};
+
+function addDiaryEntry() {
+  const text = document.getElementById('diaryInput').value.trim();
+  if (!text) return;
+  const type = document.getElementById('diaryType').value;
+  const sprint = sprints.find(s => s.id === activeSprintId);
+  diary.unshift({
+    id: Date.now(), type, text,
+    sprintId: activeSprintId,
+    sprintName: sprint ? sprint.short : '',
+    time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+    date: new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+  });
+  document.getElementById('diaryInput').value = '';
+  saveState();
+  renderDiary();
+  updateVelocity();
+}
+
+function renderDiary() {
+  const el = document.getElementById('diaryEntries');
+  if (!diary.length) {
+    el.innerHTML = `<div style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:10px;text-align:center;padding:20px">Дневник пуст.<br>Добавь первую запись →</div>`;
+    return;
+  }
+  el.innerHTML = diary.slice(0, 40).map(e => {
+    const m = TYPE_META[e.type] || TYPE_META.note;
+    return `<div class="entry entry-${e.type}">
+      <div class="entry-header">
+        <span class="entry-type-badge" style="background:${m.bg};color:${m.color}">${m.label}</span>
+        <span class="entry-sprint-tag">${e.sprintName || ''}</span>
+        <span class="entry-time">${e.date} ${e.time}</span>
+      </div>
+      <div class="entry-text">${e.text}</div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PROGRESS + VELOCITY
+// ═══════════════════════════════════════════════════════════════
+
+function updateProgress() {
+  const sprint = sprints.find(s => s.id === activeSprintId);
+  if (!sprint || !sprint.tasks.length) return;
+  const pct = Math.round(sprint.tasks.filter(t => t.status === 'done').length / sprint.tasks.length * 100);
+  const circumference = 82;
+  const offset = circumference - (pct / 100) * circumference;
+  document.getElementById('progressRing').style.strokeDashoffset = offset;
+  document.getElementById('progressLabel').textContent = pct + '%';
+}
+
+function updateVelocity() {
+  const allTasks = sprints.flatMap(s => s.tasks);
+  const total = allTasks.length;
+  const done = allTasks.filter(t => t.status === 'done').length;
+  const sp = allTasks.filter(t => t.status === 'done').reduce((a, t) => a + t.pts, 0);
+  const spTotal = allTasks.reduce((a, t) => a + t.pts, 0);
+  const pct = total ? Math.round(done / total * 100) : 0;
+
+  document.getElementById('v-total').textContent = total;
+  document.getElementById('v-done').textContent = done;
+  document.getElementById('v-pct').textContent = `${pct}% прогресс`;
+  document.getElementById('v-sp').textContent = sp;
+  document.getElementById('v-sp-total').textContent = spTotal;
+  document.getElementById('v-diary').textContent = diary.length;
+
+  // Burndown bars
+  const bars = document.getElementById('burndownBars');
+  const maxPct = 100;
+  bars.innerHTML = sprints.map(s => {
+    const d = s.tasks.filter(t => t.status === 'done').length;
+    const total = s.tasks.length || 1;
+    const p = Math.round(d / total * 100);
+    const h = Math.max(4, Math.round(p * 0.8));
+    const color = p === 100 ? 'var(--green)' : p > 50 ? 'var(--accent)' : p > 0 ? 'var(--orange)' : 'var(--border2)';
+    return `<div class="bd-bar-wrap">
+      <div class="bd-bar" style="height:${h}px;background:${color}"></div>
+      <div class="bd-bar-label">S${s.id}</div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════════════
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  btn.classList.add('active');
+  if (tab === 'velocity') updateVelocity();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// START
+// ═══════════════════════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>

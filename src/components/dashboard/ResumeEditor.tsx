@@ -201,6 +201,11 @@ export default function ResumeEditor({
             />
             <AIBlockPanel
               kind="summary"
+              quickPrompts={[
+                "Усилить",
+                "Сократить до 2 предложений",
+                "Сделать конкретнее",
+              ]}
               buildContext={() => ({
                 fullName: data.fullName,
                 title: data.title,
@@ -279,6 +284,12 @@ export default function ResumeEditor({
                   />
                   <AIBlockPanel
                     kind="bullets"
+                    quickPrompts={[
+                      "Усилить",
+                      "Добавить метрики",
+                      "Короче",
+                      "Начать с глаголов действия",
+                    ]}
                     buildContext={() => ({
                       role: exp.role,
                       company: exp.company,

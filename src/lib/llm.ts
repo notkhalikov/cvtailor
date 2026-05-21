@@ -117,3 +117,71 @@ export async function parseResumeText(text: string): Promise<ResumeData> {
   if (!out) throw new Error("Модель вернула пустой ответ.");
   return normalize(extractJson(out));
 }
+
+// ─── Block-level AI editing (streaming) ──────────────────────────
+
+export type BlockKind = "summary" | "bullets";
+
+export type BlockContext = {
+  fullName?: string;
+  title?: string;
+  role?: string;
+  company?: string;
+  period?: string;
+  skills?: string[];
+  current: string; // current text (summary) or bullets joined by newlines
+};
+
+function buildBlockPrompt(
+  kind: BlockKind,
+  instruction: string,
+  ctx: BlockContext,
+): { system: string; user: string } {
+  if (kind === "summary") {
+    return {
+      system:
+        "Ты — редактор резюме. Улучшаешь блок summary. Пиши на языке оригинала, по делу, без воды и клише. Верни ТОЛЬКО новый текст summary — без пояснений, без markdown, без кавычек.",
+      user: `Кандидат: ${ctx.fullName ?? ""}, ${ctx.title ?? ""}.
+${ctx.skills?.length ? `Навыки: ${ctx.skills.join(", ")}.\n` : ""}Текущее summary:
+"""
+${ctx.current || "(пусто)"}
+"""
+
+Инструкция: ${instruction}`,
+    };
+  }
+  return {
+    system:
+      "Ты — редактор резюме. Улучшаешь список достижений одной позиции опыта. Конкретика, глаголы действия, метрики где уместно. Пиши на языке оригинала. Верни ТОЛЬКО пункты — по одному на строку, без нумерации, без маркеров, без markdown.",
+    user: `Позиция: ${ctx.role ?? ""} — ${ctx.company ?? ""} (${ctx.period ?? ""}).
+Текущие пункты:
+"""
+${ctx.current || "(пусто)"}
+"""
+
+Инструкция: ${instruction}`,
+  };
+}
+
+/**
+ * Streams an AI rewrite of a single resume block. Yields text chunks.
+ */
+export async function* streamBlock(
+  kind: BlockKind,
+  instruction: string,
+  ctx: BlockContext,
+): AsyncGenerator<string> {
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  const { system, user } = buildBlockPrompt(kind, instruction, ctx);
+
+  const stream = await ai.models.generateContentStream({
+    model: MODEL,
+    contents: user,
+    config: { systemInstruction: system, temperature: 0.4 },
+  });
+
+  for await (const chunk of stream) {
+    const t = chunk.text;
+    if (t) yield t;
+  }
+}

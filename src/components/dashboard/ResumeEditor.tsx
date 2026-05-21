@@ -7,6 +7,15 @@ import type {
   ResumeExperience,
   ResumeEducation,
 } from "@/lib/resume-schema";
+import AIBlockPanel from "@/components/dashboard/AIBlockPanel";
+
+// Splits AI bullet output (one per line) into clean bullet strings.
+function splitBullets(text: string): string[] {
+  return text
+    .split("\n")
+    .map((b) => b.replace(/^[\s•\-*\d.)]+/, "").trim())
+    .filter((b) => b !== "");
+}
 
 const inputCls =
   "w-full rounded-lg border border-zinc-800 bg-zinc-900/50 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-600 outline-none transition-colors focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20";
@@ -183,12 +192,24 @@ export default function ResumeEditor({
 
         {/* Summary */}
         <Block title="Summary">
-          <textarea
-            className={`${inputCls} min-h-[96px] resize-y leading-relaxed`}
-            value={data.summary}
-            placeholder="Краткое описание профиля"
-            onChange={(e) => patch({ summary: e.target.value })}
-          />
+          <div className="flex flex-col gap-2">
+            <textarea
+              className={`${inputCls} min-h-[96px] resize-y leading-relaxed`}
+              value={data.summary}
+              placeholder="Краткое описание профиля"
+              onChange={(e) => patch({ summary: e.target.value })}
+            />
+            <AIBlockPanel
+              kind="summary"
+              buildContext={() => ({
+                fullName: data.fullName,
+                title: data.title,
+                skills: data.skills,
+                current: data.summary,
+              })}
+              onApply={(t) => patch({ summary: t })}
+            />
+          </div>
         </Block>
 
         {/* Experience */}
@@ -250,11 +271,23 @@ export default function ResumeEditor({
                     }
                   />
                 </div>
-                <div className="mt-3 flex flex-col gap-1.5">
+                <div className="mt-3 flex flex-col gap-2">
                   <Label>Достижения</Label>
                   <BulletList
                     bullets={exp.bullets}
                     onChange={(bullets) => patchExperience(i, { bullets })}
+                  />
+                  <AIBlockPanel
+                    kind="bullets"
+                    buildContext={() => ({
+                      role: exp.role,
+                      company: exp.company,
+                      period: exp.period,
+                      current: exp.bullets.join("\n"),
+                    })}
+                    onApply={(t) =>
+                      patchExperience(i, { bullets: splitBullets(t) })
+                    }
                   />
                 </div>
               </div>

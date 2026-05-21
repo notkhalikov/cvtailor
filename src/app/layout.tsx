@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CV Tailor",
-  description: "Tailor your CV to any job description",
+  title: "CV Tailor — резюме под каждую вакансию",
+  description:
+    "ИИ-сервис, который адаптирует ваше резюме под конкретную вакансию: match score, gap-анализ и экспорт в PDF.",
 };
 
 export default function RootLayout({
@@ -12,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="ru">
       <body className="antialiased">{children}</body>
     </html>
   );

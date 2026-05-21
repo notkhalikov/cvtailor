@@ -61,10 +61,12 @@ export default function ResumeEditor({
   id,
   title: initialTitle,
   initialData,
+  originalData,
 }: {
   id: string;
   title: string;
   initialData: ResumeData;
+  originalData: ResumeData | null;
 }) {
   const [title, setTitle] = useState(initialTitle);
   const [data, setData] = useState<ResumeData>(initialData);
@@ -73,6 +75,18 @@ export default function ResumeEditor({
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [skillDraft, setSkillDraft] = useState("");
+  const [confirmRevert, setConfirmRevert] = useState(false);
+
+  const canRevert =
+    !!originalData &&
+    JSON.stringify(originalData) !== JSON.stringify(data);
+
+  function revert() {
+    if (!originalData) return;
+    setData(originalData);
+    setDirty(true);
+    setConfirmRevert(false);
+  }
 
   function patch(p: Partial<ResumeData>) {
     setData((d) => ({ ...d, ...p }));
@@ -136,15 +150,43 @@ export default function ResumeEditor({
           ← резюме
         </Link>
         <div className="flex items-center gap-3">
-          {dirty ? (
-            <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-500">
-              есть несохранённые правки
+          {confirmRevert ? (
+            <span className="flex items-center gap-2 text-xs text-zinc-400">
+              Откатить к исходному разбору?
+              <button
+                onClick={revert}
+                className="rounded-md border border-rose-500/40 px-2 py-1 font-medium text-rose-400 transition-colors hover:bg-rose-500/10"
+              >
+                Откатить
+              </button>
+              <button
+                onClick={() => setConfirmRevert(false)}
+                className="rounded-md border border-zinc-800 px-2 py-1 text-zinc-400 transition-colors hover:text-zinc-50"
+              >
+                Отмена
+              </button>
             </span>
-          ) : savedAt ? (
-            <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-emerald-400">
-              сохранено
-            </span>
-          ) : null}
+          ) : (
+            <>
+              {canRevert && (
+                <button
+                  onClick={() => setConfirmRevert(true)}
+                  className="font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-500 transition-colors hover:text-zinc-300"
+                >
+                  ↺ к исходнику
+                </button>
+              )}
+              {dirty ? (
+                <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-500">
+                  есть несохранённые правки
+                </span>
+              ) : savedAt ? (
+                <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-emerald-400">
+                  сохранено
+                </span>
+              ) : null}
+            </>
+          )}
           <button
             onClick={save}
             disabled={saving || !dirty}

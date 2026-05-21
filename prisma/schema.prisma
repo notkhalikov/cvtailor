@@ -30,6 +30,7 @@ model Resume {
   title        String   @default("Моё резюме")
   originalText String?  @db.Text
   data         Json?
+  originalData Json? // snapshot of the first machine parse, for "revert to source"
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

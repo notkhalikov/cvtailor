@@ -16,13 +16,14 @@ export default async function ResumeEditorPage({
   const resume = user
     ? await prisma.resume.findFirst({
         where: { id: params.id, userId: user.id },
-        select: { id: true, title: true, data: true },
+        select: { id: true, title: true, data: true, originalData: true },
       })
     : null;
 
   if (!resume) notFound();
 
   const data = (resume.data as ResumeData | null) ?? null;
+  const originalData = (resume.originalData as ResumeData | null) ?? null;
 
   if (!data) {
     return (
@@ -45,6 +46,11 @@ export default async function ResumeEditorPage({
   }
 
   return (
-    <ResumeEditor id={resume.id} title={resume.title} initialData={data} />
+    <ResumeEditor
+      id={resume.id}
+      title={resume.title}
+      initialData={data}
+      originalData={originalData}
+    />
   );
 }

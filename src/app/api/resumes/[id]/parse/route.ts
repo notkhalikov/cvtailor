@@ -39,9 +39,10 @@ export async function POST(
 
   try {
     const data = await parseResumeText(resume.originalText);
+    // Store the same structure as the immutable "source" snapshot for revert.
     await prisma.resume.update({
       where: { id: resume.id },
-      data: { data },
+      data: { data, originalData: data },
     });
     return NextResponse.json({ data });
   } catch (err) {

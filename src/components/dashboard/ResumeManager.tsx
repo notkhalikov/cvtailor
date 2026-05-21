@@ -1,11 +1,13 @@
 "use client";
 
 import { useRef, useState } from "react";
+import type { ResumeData } from "@/lib/resume-schema";
 
 export type ResumeItem = {
   id: string;
   title: string;
   createdAt: string;
+  data: ResumeData | null;
 };
 
 // Effective ceiling: Vercel serverless body limit (~4.5 MB), kept at 4 MB.
@@ -56,7 +58,32 @@ export default function ResumeManager({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [parsingId, setParsingId] = useState<string | null>(null);
+  const [parseError, setParseError] = useState<Record<string, string>>({});
   const inputRef = useRef<HTMLInputElement>(null);
+
+  async function parse(id: string) {
+    setParsingId(id);
+    setParseError((p) => ({ ...p, [id]: "" }));
+    try {
+      const res = await fetch(`/api/resumes/${id}/parse`, { method: "POST" });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) {
+        setParseError((p) => ({
+          ...p,
+          [id]: body?.error ?? `Не удалось разобрать (ошибка ${res.status}).`,
+        }));
+        return;
+      }
+      setResumes((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, data: body.data } : r)),
+      );
+    } catch {
+      setParseError((p) => ({ ...p, [id]: "Сеть недоступна." }));
+    } finally {
+      setParsingId(null);
+    }
+  }
 
   async function upload(file: File) {
     setError("");
@@ -88,7 +115,10 @@ export default function ResumeManager({
         );
         return;
       }
-      setResumes((prev) => [data.resume, ...prev]);
+      const item: ResumeItem = { ...data.resume, data: null };
+      setResumes((prev) => [item, ...prev]);
+      // Kick off structured parsing right away.
+      parse(item.id);
     } catch {
       setError("Сеть недоступна. Попробуйте позже.");
     } finally {
@@ -161,31 +191,121 @@ export default function ResumeManager({
 
       {/* List */}
       {resumes.length > 0 && (
-        <ul className="divide-y divide-zinc-800 overflow-hidden rounded-2xl border border-zinc-800">
-          {resumes.map((r) => (
-            <li
-              key={r.id}
-              className="flex items-center justify-between gap-4 bg-zinc-950 px-5 py-4 transition-colors hover:bg-zinc-900/40"
-            >
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-zinc-50">
-                  {r.title}
-                </p>
-                <p className="font-mono text-xs text-zinc-500">
-                  загружено {formatDate(r.createdAt)}
-                </p>
-              </div>
-              <button
-                onClick={() => remove(r.id)}
-                disabled={deletingId === r.id}
-                aria-label="Удалить резюме"
-                className="shrink-0 rounded-lg border border-zinc-800 p-2 text-zinc-500 transition-colors hover:border-rose-500/40 hover:text-rose-400 disabled:opacity-50"
+        <ul className="flex flex-col gap-3">
+          {resumes.map((r) => {
+            const parsing = parsingId === r.id;
+            return (
+              <li
+                key={r.id}
+                className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950"
               >
-                <TrashIcon className="h-[18px] w-[18px]" />
-              </button>
-            </li>
-          ))}
+                <div className="flex items-center justify-between gap-4 px-5 py-4">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-zinc-50">
+                      {r.title}
+                    </p>
+                    <p className="font-mono text-xs text-zinc-500">
+                      загружено {formatDate(r.createdAt)}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {r.data ? (
+                      <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-emerald-400">
+                        разобрано
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => parse(r.id)}
+                        disabled={parsing}
+                        className="rounded-lg border border-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:border-emerald-500/40 hover:text-emerald-400 disabled:opacity-60"
+                      >
+                        {parsing ? "Разбираем…" : "Разобрать"}
+                      </button>
+                    )}
+                    {r.data && (
+                      <button
+                        onClick={() => parse(r.id)}
+                        disabled={parsing}
+                        className="rounded-lg border border-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-400 transition-colors hover:text-zinc-50 disabled:opacity-60"
+                      >
+                        {parsing ? "…" : "Заново"}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => remove(r.id)}
+                      disabled={deletingId === r.id}
+                      aria-label="Удалить резюме"
+                      className="rounded-lg border border-zinc-800 p-2 text-zinc-500 transition-colors hover:border-rose-500/40 hover:text-rose-400 disabled:opacity-50"
+                    >
+                      <TrashIcon className="h-[18px] w-[18px]" />
+                    </button>
+                  </div>
+                </div>
+
+                {parseError[r.id] && (
+                  <p className="border-t border-zinc-800 px-5 py-3 text-sm text-rose-400">
+                    {parseError[r.id]}
+                  </p>
+                )}
+
+                {r.data && <ParsedPreview data={r.data} />}
+              </li>
+            );
+          })}
         </ul>
+      )}
+    </div>
+  );
+}
+
+function ParsedPreview({ data }: { data: ResumeData }) {
+  return (
+    <div className="border-t border-zinc-800 px-5 py-4">
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        {data.fullName && (
+          <span className="text-sm font-medium text-zinc-50">
+            {data.fullName}
+          </span>
+        )}
+        {data.title && (
+          <span className="text-sm text-zinc-400">{data.title}</span>
+        )}
+      </div>
+
+      {data.summary && (
+        <p className="mt-2 max-w-[70ch] text-sm leading-relaxed text-zinc-400">
+          {data.summary}
+        </p>
+      )}
+
+      <div className="mt-3 flex flex-wrap gap-2 font-mono text-[11px] text-zinc-400">
+        <span className="rounded-md border border-zinc-800 px-2 py-1">
+          опыт: {data.experience.length}
+        </span>
+        <span className="rounded-md border border-zinc-800 px-2 py-1">
+          навыки: {data.skills.length}
+        </span>
+        <span className="rounded-md border border-zinc-800 px-2 py-1">
+          образование: {data.education.length}
+        </span>
+      </div>
+
+      {data.skills.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {data.skills.slice(0, 12).map((s, i) => (
+            <span
+              key={`${s}-${i}`}
+              className="rounded-md bg-zinc-900 px-2 py-1 text-xs text-zinc-300"
+            >
+              {s}
+            </span>
+          ))}
+          {data.skills.length > 12 && (
+            <span className="px-2 py-1 text-xs text-zinc-500">
+              +{data.skills.length - 12}
+            </span>
+          )}
+        </div>
       )}
     </div>
   );

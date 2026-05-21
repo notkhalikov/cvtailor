@@ -1,6 +1,7 @@
 import { getOrCreateUser } from "@/lib/user";
 import { prisma } from "@/lib/prisma";
 import ResumeManager from "@/components/dashboard/ResumeManager";
+import type { ResumeData } from "@/lib/resume-schema";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,7 @@ export default async function ResumesPage() {
     ? await prisma.resume.findMany({
         where: { userId: user.id },
         orderBy: { createdAt: "desc" },
-        select: { id: true, title: true, createdAt: true },
+        select: { id: true, title: true, createdAt: true, data: true },
       })
     : [];
 
@@ -18,6 +19,7 @@ export default async function ResumesPage() {
     id: r.id,
     title: r.title,
     createdAt: r.createdAt.toISOString(),
+    data: (r.data as ResumeData | null) ?? null,
   }));
 
   return (

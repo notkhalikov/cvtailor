@@ -6,7 +6,9 @@ import { prisma } from "@/lib/prisma";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
+// Vercel serverless functions reject request bodies above ~4.5 MB at the edge,
+// so keep our own limit just under that.
+const MAX_BYTES = 4 * 1024 * 1024; // 4 MB
 
 export async function POST(req: Request) {
   const user = await getOrCreateUser();
@@ -36,7 +38,7 @@ export async function POST(req: Request) {
   }
   if (file.size > MAX_BYTES) {
     return NextResponse.json(
-      { error: "Файл больше 10 МБ." },
+      { error: "Файл больше 4 МБ." },
       { status: 413 },
     );
   }

@@ -8,6 +8,9 @@ export type ResumeItem = {
   createdAt: string;
 };
 
+// Effective ceiling: Vercel serverless body limit (~4.5 MB), kept at 4 MB.
+const MAX_BYTES = 4 * 1024 * 1024;
+
 function UploadIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
@@ -61,14 +64,28 @@ export default function ResumeManager({
       setError("Поддерживается только PDF.");
       return;
     }
+    // Vercel serverless functions reject request bodies larger than ~4.5 MB
+    // at the platform edge, so guard client-side before the upload.
+    if (file.size > MAX_BYTES) {
+      setError("Файл больше 4 МБ. Сожмите PDF и попробуйте снова.");
+      return;
+    }
     setUploading(true);
     try {
       const body = new FormData();
       body.append("file", file);
       const res = await fetch("/api/resumes", { method: "POST", body });
-      const data = await res.json();
+
+      // The platform may return a non-JSON error (e.g. 413) before our handler.
+      const data = await res.json().catch(() => null);
+
       if (!res.ok) {
-        setError(data.error ?? "Не удалось загрузить файл.");
+        setError(
+          data?.error ??
+            (res.status === 413
+              ? "Файл слишком большой (лимит ~4 МБ)."
+              : `Не удалось загрузить файл (ошибка ${res.status}).`),
+        );
         return;
       }
       setResumes((prev) => [data.resume, ...prev]);
@@ -138,6 +155,7 @@ export default function ResumeManager({
         >
           {uploading ? "Загружаем…" : "Выбрать PDF"}
         </button>
+        <p className="font-mono text-xs text-zinc-500">PDF, до 4 МБ</p>
         {error && <p className="text-sm text-rose-400">{error}</p>}
       </div>
 

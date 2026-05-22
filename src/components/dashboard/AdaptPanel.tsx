@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ResumeData } from "@/lib/resume-schema";
-import PdfDownloadButton from "@/components/dashboard/PdfDownloadButton";
 import PdfPreview from "@/components/dashboard/PdfPreview";
 
 export default function AdaptPanel({
@@ -66,26 +65,17 @@ export default function AdaptPanel({
         <h2 className="text-sm font-semibold tracking-tight text-zinc-50">
           Адаптированное резюме
         </h2>
-        <div className="flex items-center gap-2">
-          {adapted && (
-            <PdfDownloadButton
-              data={adapted}
-              fileBase="Адаптированное резюме"
-              variant="outline"
-            />
-          )}
-          <button
-            onClick={run}
-            disabled={running}
-            className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 transition-all hover:bg-emerald-400 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {running
-              ? "Адаптируем…"
-              : adapted
-                ? "Адаптировать заново"
-                : "Адаптировать под вакансию"}
-          </button>
-        </div>
+        <button
+          onClick={run}
+          disabled={running}
+          className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 transition-all hover:bg-emerald-400 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {running
+            ? "Адаптируем…"
+            : adapted
+              ? "Адаптировать заново"
+              : "Адаптировать под вакансию"}
+        </button>
       </div>
 
       {error && <p className="text-sm text-rose-400">{error}</p>}
@@ -99,7 +89,7 @@ export default function AdaptPanel({
 
       {adapted && <AdaptedView data={adapted} />}
 
-      {adapted && <PdfPreview data={adapted} />}
+      {adapted && <PdfPreview data={adapted} fileBase="Адаптированное резюме" />}
     </div>
   );
 }

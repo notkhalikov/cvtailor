@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { ResumeData } from "@/lib/resume-schema";
-import { downloadClassicPdf } from "@/lib/pdf/download";
+import { downloadResumePdf } from "@/lib/pdf/download";
 
 function DownloadIcon({ className }: { className?: string }) {
   return (
@@ -104,7 +104,7 @@ export default function TailoredManager({
         }));
         return;
       }
-      await downloadClassicPdf(body.data as ResumeData, title);
+      await downloadResumePdf(body.data as ResumeData, title);
     } catch {
       setRowError((p) => ({ ...p, [id]: "Не удалось собрать PDF." }));
     } finally {

@@ -1,4 +1,5 @@
 import type { ResumeData } from "@/lib/resume-schema";
+import { type Design, DEFAULT_DESIGN } from "@/lib/pdf/design";
 
 export function sanitizeFileBase(name: string) {
   return (name.trim() || "resume")
@@ -7,16 +8,19 @@ export function sanitizeFileBase(name: string) {
 }
 
 /**
- * Builds a Classic-template PDF from resume data and triggers a download.
- * react-pdf and the template are imported lazily so they stay out of the
- * initial bundle.
+ * Builds a PDF (chosen template + accent) from resume data and triggers a
+ * download. react-pdf and the templates load lazily.
  */
-export async function downloadClassicPdf(data: ResumeData, fileBase: string) {
-  const [{ pdf }, { ClassicResume }] = await Promise.all([
+export async function downloadResumePdf(
+  data: ResumeData,
+  fileBase: string,
+  design: Design = DEFAULT_DESIGN,
+) {
+  const [{ pdf }, { ResumeDocument }] = await Promise.all([
     import("@react-pdf/renderer"),
-    import("@/lib/pdf/ClassicResume"),
+    import("@/lib/pdf/ResumeDocument"),
   ]);
-  const blob = await pdf(<ClassicResume data={data} />).toBlob();
+  const blob = await pdf(<ResumeDocument data={data} design={design} />).toBlob();
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;

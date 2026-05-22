@@ -8,7 +8,6 @@ import type {
   ResumeEducation,
 } from "@/lib/resume-schema";
 import AIBlockPanel from "@/components/dashboard/AIBlockPanel";
-import PdfDownloadButton from "@/components/dashboard/PdfDownloadButton";
 import PdfPreview from "@/components/dashboard/PdfPreview";
 
 // Splits AI bullet output (one per line) into clean bullet strings.
@@ -214,7 +213,6 @@ export default function ResumeEditor({
               ) : null}
             </>
           )}
-          <PdfDownloadButton data={data} fileBase={title} variant="outline" />
           <button
             onClick={save}
             disabled={saving || !dirty}
@@ -494,7 +492,7 @@ export default function ResumeEditor({
           </div>
         </Block>
 
-        <PdfPreview data={data} />
+        <PdfPreview data={data} fileBase={title} />
       </div>
     </section>
   );

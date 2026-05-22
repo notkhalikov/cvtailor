@@ -4,6 +4,7 @@ import type {
   ResumeExperience,
   ResumeEducation,
 } from "@/lib/resume-schema";
+import type { JobData } from "@/lib/job-schema";
 
 // Google Gemini — free tier. Reads GEMINI_API_KEY from the environment.
 const MODEL = "gemini-2.5-flash";
@@ -116,6 +117,60 @@ export async function parseResumeText(text: string): Promise<ResumeData> {
   const out = res.text;
   if (!out) throw new Error("Модель вернула пустой ответ.");
   return normalize(extractJson(out));
+}
+
+// ─── Job posting parsing ─────────────────────────────────────────
+
+const JOB_SYSTEM_PROMPT = `Ты — парсер вакансий для сервиса CV Tailor. На вход дают сырой текст описания вакансии.
+
+Верни СТРОГО один JSON-объект без markdown:
+{
+  "jobTitle": string,
+  "company": string,
+  "location": string,
+  "summary": string,              // 1-2 предложения о роли
+  "responsibilities": string[],   // обязанности
+  "requirements": string[],       // обязательные требования (must-have)
+  "niceToHave": string[],         // желательные требования
+  "skills": string[]              // ключевые навыки/технологии/ключевые слова для матчинга
+}
+
+Правила:
+- Не выдумывай; чего нет — пустая строка/массив.
+- skills — короткие ключевые слова (навыки, технологии, инструменты), пригодные для сопоставления с резюме.
+- Язык значений сохраняй как в оригинале вакансии.`;
+
+function normalizeJob(raw: unknown): JobData {
+  const o = (raw ?? {}) as Record<string, unknown>;
+  return {
+    jobTitle: str(o.jobTitle),
+    company: str(o.company),
+    location: str(o.location),
+    summary: str(o.summary),
+    responsibilities: strArray(o.responsibilities),
+    requirements: strArray(o.requirements),
+    niceToHave: strArray(o.niceToHave),
+    skills: strArray(o.skills),
+  };
+}
+
+/**
+ * Parses raw job-posting text into a structured JD via Gemini (JSON mode).
+ */
+export async function parseJobText(text: string): Promise<JobData> {
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  const res = await ai.models.generateContent({
+    model: MODEL,
+    contents: `Разбери эту вакансию:\n\n<job>\n${text}\n</job>`,
+    config: {
+      systemInstruction: JOB_SYSTEM_PROMPT,
+      responseMimeType: "application/json",
+      temperature: 0,
+    },
+  });
+  const out = res.text;
+  if (!out) throw new Error("Модель вернула пустой ответ.");
+  return normalizeJob(extractJson(out));
 }
 
 // ─── Block-level AI editing (streaming) ──────────────────────────

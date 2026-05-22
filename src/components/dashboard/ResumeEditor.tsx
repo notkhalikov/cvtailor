@@ -43,6 +43,19 @@ function XIcon({ className }: { className?: string }) {
   );
 }
 
+function GripIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <circle cx="9" cy="6" r="1.4" />
+      <circle cx="15" cy="6" r="1.4" />
+      <circle cx="9" cy="12" r="1.4" />
+      <circle cx="15" cy="12" r="1.4" />
+      <circle cx="9" cy="18" r="1.4" />
+      <circle cx="15" cy="18" r="1.4" />
+    </svg>
+  );
+}
+
 const emptyExperience = (): ResumeExperience => ({
   company: "",
   role: "",
@@ -76,6 +89,18 @@ export default function ResumeEditor({
   const [error, setError] = useState("");
   const [skillDraft, setSkillDraft] = useState("");
   const [confirmRevert, setConfirmRevert] = useState(false);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+
+  function reorderExperience(from: number, to: number) {
+    if (from === to) return;
+    setData((d) => {
+      const ex = [...d.experience];
+      const [moved] = ex.splice(from, 1);
+      ex.splice(to, 0, moved);
+      return { ...d, experience: ex };
+    });
+    setDirty(true);
+  }
 
   const canRevert =
     !!originalData &&
@@ -275,9 +300,28 @@ export default function ResumeEditor({
             {data.experience.map((exp, i) => (
               <div
                 key={i}
-                className="rounded-xl border border-zinc-800 bg-zinc-950 p-4"
+                onDragOver={(e) => {
+                  if (dragIndex === null) return;
+                  e.preventDefault();
+                  if (dragIndex !== i) {
+                    reorderExperience(dragIndex, i);
+                    setDragIndex(i);
+                  }
+                }}
+                className={`rounded-xl border border-zinc-800 bg-zinc-950 p-4 transition-opacity ${
+                  dragIndex === i ? "opacity-50" : ""
+                }`}
               >
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-2">
+                  <button
+                    draggable
+                    onDragStart={() => setDragIndex(i)}
+                    onDragEnd={() => setDragIndex(null)}
+                    aria-label="Перетащить позицию"
+                    className="mt-1.5 shrink-0 cursor-grab rounded-md p-1 text-zinc-600 transition-colors hover:text-zinc-300 active:cursor-grabbing"
+                  >
+                    <GripIcon className="h-[18px] w-[18px]" />
+                  </button>
                   <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
                     <input
                       className={inputCls}

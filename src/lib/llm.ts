@@ -14,6 +14,30 @@ import type {
 // Google Gemini — free tier. Reads GEMINI_API_KEY from the environment.
 const MODEL = "gemini-2.5-flash";
 
+// For structured extraction/transform we don't need the model's "thinking"
+// (it can eat the output budget on long/messy input and yield an empty
+// response). Disable it and give the output room.
+const JSON_GEN = {
+  responseMimeType: "application/json" as const,
+  temperature: 0,
+  maxOutputTokens: 8192,
+  thinkingConfig: { thinkingBudget: 0 },
+};
+
+type GenLike = {
+  text?: string;
+  candidates?: { finishReason?: string }[];
+};
+
+// Returns response text or throws an error that names why it was empty
+// (finishReason: SAFETY / MAX_TOKENS / RECITATION), so logs are actionable.
+function textOrThrow(res: GenLike): string {
+  const out = res.text;
+  if (out && out.trim()) return out;
+  const reason = res.candidates?.[0]?.finishReason ?? "EMPTY";
+  throw new Error(`empty model response (finishReason: ${reason})`);
+}
+
 const SYSTEM_PROMPT = `Ты — парсер резюме для сервиса CV Tailor. На вход тебе дают сырой текст резюме, извлечённый из PDF (возможны артефакты вёрстки, переносы строк, склеенные слова).
 
 Верни СТРОГО один JSON-объект без markdown-обёртки, по схеме:
@@ -112,15 +136,10 @@ export async function parseResumeText(text: string): Promise<ResumeData> {
   const res = await ai.models.generateContent({
     model: MODEL,
     contents: `Разбери это резюме:\n\n<resume>\n${text}\n</resume>`,
-    config: {
-      systemInstruction: SYSTEM_PROMPT,
-      responseMimeType: "application/json",
-      temperature: 0,
-    },
+    config: { systemInstruction: SYSTEM_PROMPT, ...JSON_GEN },
   });
 
-  const out = res.text;
-  if (!out) throw new Error("Модель вернула пустой ответ.");
+  const out = textOrThrow(res);
   return normalize(extractJson(out));
 }
 
@@ -167,14 +186,9 @@ export async function parseJobText(text: string): Promise<JobData> {
   const res = await ai.models.generateContent({
     model: MODEL,
     contents: `Разбери эту вакансию:\n\n<job>\n${text}\n</job>`,
-    config: {
-      systemInstruction: JOB_SYSTEM_PROMPT,
-      responseMimeType: "application/json",
-      temperature: 0,
-    },
+    config: { systemInstruction: JOB_SYSTEM_PROMPT, ...JSON_GEN },
   });
-  const out = res.text;
-  if (!out) throw new Error("Модель вернула пустой ответ.");
+  const out = textOrThrow(res);
   return normalizeJob(extractJson(out));
 }
 
@@ -210,14 +224,9 @@ ${JSON.stringify(resume)}
 ${JSON.stringify(job)}
 
 Верни адаптированное резюме в том же JSON-формате.`,
-    config: {
-      systemInstruction: ADAPT_SYSTEM_PROMPT,
-      responseMimeType: "application/json",
-      temperature: 0.3,
-    },
+    config: { systemInstruction: ADAPT_SYSTEM_PROMPT, ...JSON_GEN, temperature: 0.3 },
   });
-  const out = res.text;
-  if (!out) throw new Error("Модель вернула пустой ответ.");
+  const out = textOrThrow(res);
   return normalize(extractJson(out));
 }
 
@@ -294,14 +303,9 @@ ${JSON.stringify(resume)}
 ${JSON.stringify(job)}
 
 Оцени соответствие и верни JSON.`,
-    config: {
-      systemInstruction: ANALYZE_SYSTEM_PROMPT,
-      responseMimeType: "application/json",
-      temperature: 0,
-    },
+    config: { systemInstruction: ANALYZE_SYSTEM_PROMPT, ...JSON_GEN },
   });
-  const out = res.text;
-  if (!out) throw new Error("Модель вернула пустой ответ.");
+  const out = textOrThrow(res);
   return normalizeAnalysis(extractJson(out));
 }
 

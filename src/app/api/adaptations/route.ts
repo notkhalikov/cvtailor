@@ -65,7 +65,10 @@ export async function POST(req: Request) {
       );
     }
     return NextResponse.json(
-      { error: "Не удалось разобрать вакансию. Попробуйте ещё раз." },
+      {
+        error: "Не удалось разобрать вакансию. Попробуйте ещё раз.",
+        detail: msg.slice(0, 200),
+      },
       { status: 502 },
     );
   }

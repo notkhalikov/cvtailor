@@ -173,6 +173,49 @@ export async function parseJobText(text: string): Promise<JobData> {
   return normalizeJob(extractJson(out));
 }
 
+// ─── Resume adaptation to a job posting ──────────────────────────
+
+const ADAPT_SYSTEM_PROMPT = `Ты — карьерный редактор сервиса CV Tailor. Тебе дают резюме кандидата (JSON) и разобранную вакансию (JSON). Адаптируй резюме под эту вакансию.
+
+Что делать:
+- Перепиши summary так, чтобы он точно бил в роль и ключевые требования вакансии.
+- В каждой позиции опыта переформулируй и переупорядочь буллеты, выводя вперёд релевантные вакансии достижения; используй ключевые слова и формулировки из вакансии там, где это правда.
+- Подними релевантные навыки выше; можешь убрать явно нерелевантные, но НЕ добавляй навыки, которых нет у кандидата.
+- Сохраняй структуру и тот же JSON-формат, что у входного резюме (fullName, title, summary, contacts, experience[{company,role,period,location,bullets[]}], skills[], education[]).
+
+КРИТИЧНО:
+- НЕ выдумывай факты, опыт, метрики, компании или навыки, которых нет в исходном резюме. Только переформулировка и расстановка акцентов.
+- Язык сохраняй как в резюме.
+- Верни СТРОГО один JSON-объект без markdown.`;
+
+/**
+ * Rewrites a resume tailored to a job posting. Returns the adapted ResumeData.
+ */
+export async function adaptResume(
+  resume: ResumeData,
+  job: JobData,
+): Promise<ResumeData> {
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  const res = await ai.models.generateContent({
+    model: MODEL,
+    contents: `РЕЗЮМЕ (JSON):
+${JSON.stringify(resume)}
+
+ВАКАНСИЯ (JSON):
+${JSON.stringify(job)}
+
+Верни адаптированное резюме в том же JSON-формате.`,
+    config: {
+      systemInstruction: ADAPT_SYSTEM_PROMPT,
+      responseMimeType: "application/json",
+      temperature: 0.3,
+    },
+  });
+  const out = res.text;
+  if (!out) throw new Error("Модель вернула пустой ответ.");
+  return normalize(extractJson(out));
+}
+
 // ─── Block-level AI editing (streaming) ──────────────────────────
 
 export type BlockKind = "summary" | "bullets";

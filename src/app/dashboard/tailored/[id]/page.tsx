@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { getOrCreateUser } from "@/lib/user";
 import { prisma } from "@/lib/prisma";
 import type { JobData } from "@/lib/job-schema";
+import type { ResumeData } from "@/lib/resume-schema";
+import AdaptPanel from "@/components/dashboard/AdaptPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -34,13 +36,21 @@ export default async function AdaptationPage({
   const adaptation = user
     ? await prisma.adaptation.findFirst({
         where: { id: params.id, userId: user.id },
-        select: { id: true, title: true, jobData: true },
+        select: {
+          id: true,
+          title: true,
+          jobData: true,
+          adaptedData: true,
+          resume: { select: { data: true } },
+        },
       })
     : null;
 
   if (!adaptation) notFound();
 
   const job = (adaptation.jobData as JobData | null) ?? null;
+  const adapted = (adaptation.adaptedData as ResumeData | null) ?? null;
+  const resumeReady = !!adaptation.resume.data;
 
   return (
     <section className="mx-auto max-w-3xl px-6 py-8">
@@ -102,14 +112,11 @@ export default async function AdaptationPage({
         </div>
       )}
 
-      <div className="mt-8 rounded-2xl border border-dashed border-zinc-800 px-5 py-6">
-        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-emerald-400">
-          скоро
-        </span>
-        <p className="mt-2 text-sm text-zinc-400">
-          Дальше: AI-адаптация резюме под эту вакансию, match score и gap-анализ.
-        </p>
-      </div>
+      <AdaptPanel
+        id={adaptation.id}
+        initialAdapted={adapted}
+        resumeReady={resumeReady}
+      />
     </section>
   );
 }

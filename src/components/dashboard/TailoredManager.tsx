@@ -2,6 +2,22 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import type { ResumeData } from "@/lib/resume-schema";
+import { downloadClassicPdf } from "@/lib/pdf/download";
+
+function DownloadIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <path
+        d="M12 4v11m0 0l-4-4m4 4l4-4M5 18.5h14"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 export type AdaptationItem = {
   id: string;
@@ -72,7 +88,29 @@ export default function TailoredManager({
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
   const [adaptingId, setAdaptingId] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [rowError, setRowError] = useState<Record<string, string>>({});
+
+  async function download(id: string, title: string) {
+    setDownloadingId(id);
+    setRowError((p) => ({ ...p, [id]: "" }));
+    try {
+      const res = await fetch(`/api/adaptations/${id}`);
+      const body = await res.json().catch(() => null);
+      if (!res.ok) {
+        setRowError((p) => ({
+          ...p,
+          [id]: body?.error ?? `Не удалось скачать (ошибка ${res.status}).`,
+        }));
+        return;
+      }
+      await downloadClassicPdf(body.data as ResumeData, title);
+    } catch {
+      setRowError((p) => ({ ...p, [id]: "Не удалось собрать PDF." }));
+    } finally {
+      setDownloadingId(null);
+    }
+  }
 
   async function create() {
     setError("");
@@ -227,6 +265,15 @@ export default function TailoredManager({
                   >
                     Подробнее
                   </Link>
+                  <button
+                    onClick={() => download(a.id, a.title)}
+                    disabled={downloadingId === a.id}
+                    aria-label="Скачать PDF"
+                    title="Скачать PDF"
+                    className="rounded-xl border border-zinc-800 p-2 text-zinc-400 transition-colors hover:border-emerald-500/40 hover:text-emerald-400 disabled:opacity-60"
+                  >
+                    <DownloadIcon className="h-[18px] w-[18px]" />
+                  </button>
                 </div>
               </div>
               {rowError[a.id] && (

@@ -1,9 +1,14 @@
 import "@/lib/pdf/fonts";
-import { Document, Page, View, Text, StyleSheet } from "@react-pdf/renderer";
+import { Document, Page, View, Text, Image, StyleSheet } from "@react-pdf/renderer";
 import type { ResumeData } from "@/lib/resume-schema";
 import type { Design } from "@/lib/pdf/design";
 
-type TplProps = { data: ResumeData; accent: string };
+type TplProps = {
+  data: ResumeData;
+  accent: string;
+  dense?: boolean;
+  photo?: string | null;
+};
 
 function Bullets({ items, color = "#1a1a1a" }: { items: string[]; color?: string }) {
   return (
@@ -19,9 +24,9 @@ function Bullets({ items, color = "#1a1a1a" }: { items: string[]; color?: string
 }
 
 /* ── Classic — 1 column, ATS-safe ─────────────────────────────── */
-function Classic({ data, accent }: TplProps) {
+function Classic({ data, accent, dense }: TplProps) {
   const s = StyleSheet.create({
-    page: { fontFamily: "DejaVu", fontSize: 10, lineHeight: 1.45, color: "#1a1a1a", padding: 44 },
+    page: { fontFamily: "DejaVu", fontSize: dense ? 9 : 10, lineHeight: dense ? 1.32 : 1.45, color: "#1a1a1a", padding: dense ? 34 : 44 },
     name: { fontSize: 18, fontWeight: "bold" },
     title: { fontSize: 11, color: "#444", marginTop: 2 },
     contacts: { fontSize: 9, color: "#555", marginTop: 4 },
@@ -74,11 +79,12 @@ function Classic({ data, accent }: TplProps) {
 }
 
 /* ── Sidebar — 2 columns ──────────────────────────────────────── */
-function Sidebar({ data, accent }: TplProps) {
+function Sidebar({ data, accent, dense, photo }: TplProps) {
   const s = StyleSheet.create({
-    page: { fontFamily: "DejaVu", fontSize: 9.5, lineHeight: 1.45, color: "#1a1a1a", flexDirection: "row" },
-    side: { width: "33%", backgroundColor: "#f3f4f6", padding: 22 },
-    main: { width: "67%", padding: 26 },
+    page: { fontFamily: "DejaVu", fontSize: dense ? 8.7 : 9.5, lineHeight: dense ? 1.32 : 1.45, color: "#1a1a1a", flexDirection: "row" },
+    side: { width: "33%", backgroundColor: "#f3f4f6", padding: dense ? 16 : 22 },
+    main: { width: "67%", padding: dense ? 20 : 26 },
+    photo: { width: "100%", height: 120, objectFit: "cover", borderRadius: 6, marginBottom: 12 },
     name: { fontSize: 17, fontWeight: "bold", color: accent },
     title: { fontSize: 10, color: "#444", marginTop: 2 },
     sideH: { fontSize: 9, fontWeight: "bold", textTransform: "uppercase", letterSpacing: 1, color: accent, marginTop: 16, marginBottom: 5 },
@@ -92,6 +98,7 @@ function Sidebar({ data, accent }: TplProps) {
     <Document>
       <Page size="A4" style={s.page}>
         <View style={s.side}>
+          {!!photo && <Image src={photo} style={s.photo} />}
           {!!data.fullName && <Text style={s.name}>{data.fullName}</Text>}
           {!!data.title && <Text style={s.title}>{data.title}</Text>}
           {data.contacts.length > 0 && (
@@ -127,14 +134,14 @@ function Sidebar({ data, accent }: TplProps) {
 }
 
 /* ── Modern — accent header band ──────────────────────────────── */
-function Modern({ data, accent }: TplProps) {
+function Modern({ data, accent, dense }: TplProps) {
   const s = StyleSheet.create({
-    page: { fontFamily: "DejaVu", fontSize: 10, lineHeight: 1.45, color: "#1a1a1a" },
-    band: { backgroundColor: accent, paddingVertical: 24, paddingHorizontal: 44 },
+    page: { fontFamily: "DejaVu", fontSize: dense ? 9 : 10, lineHeight: dense ? 1.32 : 1.45, color: "#1a1a1a" },
+    band: { backgroundColor: accent, paddingVertical: dense ? 18 : 24, paddingHorizontal: dense ? 34 : 44 },
     name: { fontSize: 20, fontWeight: "bold", color: "#fff" },
     title: { fontSize: 11, color: "#ffffffcc", marginTop: 2 },
     contacts: { fontSize: 9, color: "#ffffffcc", marginTop: 6 },
-    body: { paddingHorizontal: 44, paddingVertical: 22 },
+    body: { paddingHorizontal: dense ? 34 : 44, paddingVertical: dense ? 16 : 22 },
     section: { marginTop: 16 },
     h: { fontSize: 10, fontWeight: "bold", textTransform: "uppercase", letterSpacing: 1.5, color: accent, marginBottom: 8 },
     exp: { marginBottom: 10 },
@@ -178,9 +185,9 @@ function Modern({ data, accent }: TplProps) {
 }
 
 /* ── Compact — dense single column ────────────────────────────── */
-function Compact({ data, accent }: TplProps) {
+function Compact({ data, accent, dense }: TplProps) {
   const s = StyleSheet.create({
-    page: { fontFamily: "DejaVu", fontSize: 8.7, lineHeight: 1.32, color: "#1a1a1a", paddingVertical: 30, paddingHorizontal: 36 },
+    page: { fontFamily: "DejaVu", fontSize: dense ? 8.2 : 8.7, lineHeight: dense ? 1.25 : 1.32, color: "#1a1a1a", paddingVertical: dense ? 24 : 30, paddingHorizontal: dense ? 30 : 36 },
     name: { fontSize: 15, fontWeight: "bold" },
     title: { fontSize: 9.5, color: "#444" },
     contacts: { fontSize: 8, color: "#555", marginTop: 2 },
@@ -225,11 +232,12 @@ function Compact({ data, accent }: TplProps) {
 }
 
 /* ── Creative — solid accent sidebar ──────────────────────────── */
-function Creative({ data, accent }: TplProps) {
+function Creative({ data, accent, dense, photo }: TplProps) {
   const s = StyleSheet.create({
-    page: { fontFamily: "DejaVu", fontSize: 9.5, lineHeight: 1.45, color: "#1a1a1a", flexDirection: "row" },
-    side: { width: "34%", backgroundColor: accent, padding: 22, color: "#fff" },
-    main: { width: "66%", padding: 26 },
+    page: { fontFamily: "DejaVu", fontSize: dense ? 8.7 : 9.5, lineHeight: dense ? 1.32 : 1.45, color: "#1a1a1a", flexDirection: "row" },
+    side: { width: "34%", backgroundColor: accent, padding: dense ? 16 : 22, color: "#fff" },
+    main: { width: "66%", padding: dense ? 20 : 26 },
+    photo: { width: "100%", height: 130, objectFit: "cover", borderRadius: 6, marginBottom: 12 },
     name: { fontSize: 18, fontWeight: "bold", color: "#fff" },
     title: { fontSize: 10, color: "#ffffffdd", marginTop: 3 },
     sideH: { fontSize: 9, fontWeight: "bold", textTransform: "uppercase", letterSpacing: 1, color: "#ffffffee", marginTop: 16, marginBottom: 5 },
@@ -243,6 +251,7 @@ function Creative({ data, accent }: TplProps) {
     <Document>
       <Page size="A4" style={s.page}>
         <View style={s.side}>
+          {!!photo && <Image src={photo} style={s.photo} />}
           {!!data.fullName && <Text style={s.name}>{data.fullName}</Text>}
           {!!data.title && <Text style={s.title}>{data.title}</Text>}
           {data.contacts.length > 0 && (<><Text style={s.sideH}>Контакты</Text>{data.contacts.map((c, i) => <Text key={i} style={s.sideItem}>{c}</Text>)}</>)}
@@ -278,17 +287,23 @@ export function ResumeDocument({
   data: ResumeData;
   design: Design;
 }) {
-  const accent = design.accent;
-  switch (design.template) {
+  // ATS mode forces a plain single-column layout: neutral color, no photo.
+  const ats = !!design.atsMode;
+  const accent = ats ? "#222222" : design.accent;
+  const dense = !!design.onePage;
+  const photo = ats ? null : (design.photo ?? null);
+  const template = ats ? "classic" : design.template;
+
+  switch (template) {
     case "sidebar":
-      return <Sidebar data={data} accent={accent} />;
+      return <Sidebar data={data} accent={accent} dense={dense} photo={photo} />;
     case "modern":
-      return <Modern data={data} accent={accent} />;
+      return <Modern data={data} accent={accent} dense={dense} />;
     case "compact":
-      return <Compact data={data} accent={accent} />;
+      return <Compact data={data} accent={accent} dense={dense} />;
     case "creative":
-      return <Creative data={data} accent={accent} />;
+      return <Creative data={data} accent={accent} dense={dense} photo={photo} />;
     default:
-      return <Classic data={data} accent={accent} />;
+      return <Classic data={data} accent={accent} dense={dense} />;
   }
 }

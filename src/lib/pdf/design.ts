@@ -11,6 +11,9 @@ export type TemplateId =
 export type Design = {
   template: TemplateId;
   accent: string; // hex
+  photo?: string | null; // data URL, shown in 2-column templates
+  atsMode?: boolean; // force plain ATS-safe (single column, neutral, no photo)
+  onePage?: boolean; // denser layout to help fit one page
 };
 
 export const TEMPLATES: { id: TemplateId; name: string; hint: string }[] = [
@@ -45,4 +48,7 @@ export const ACCENTS: { name: string; hex: string }[] = [
 export const DEFAULT_DESIGN: Design = {
   template: "classic",
   accent: "#10b981",
+  photo: null,
+  atsMode: false,
+  onePage: false,
 };

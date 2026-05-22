@@ -9,6 +9,7 @@ import type {
 } from "@/lib/resume-schema";
 import AIBlockPanel from "@/components/dashboard/AIBlockPanel";
 import PdfDownloadButton from "@/components/dashboard/PdfDownloadButton";
+import PdfPreview from "@/components/dashboard/PdfPreview";
 
 // Splits AI bullet output (one per line) into clean bullet strings.
 function splitBullets(text: string): string[] {
@@ -492,6 +493,8 @@ export default function ResumeEditor({
             )}
           </div>
         </Block>
+
+        <PdfPreview data={data} />
       </div>
     </section>
   );

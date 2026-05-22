@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ResumeData } from "@/lib/resume-schema";
 import PdfDownloadButton from "@/components/dashboard/PdfDownloadButton";
+import PdfPreview from "@/components/dashboard/PdfPreview";
 
 export default function AdaptPanel({
   id,
@@ -97,6 +98,8 @@ export default function AdaptPanel({
       )}
 
       {adapted && <AdaptedView data={adapted} />}
+
+      {adapted && <PdfPreview data={adapted} />}
     </div>
   );
 }

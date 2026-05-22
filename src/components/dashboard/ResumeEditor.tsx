@@ -8,6 +8,7 @@ import type {
   ResumeEducation,
 } from "@/lib/resume-schema";
 import AIBlockPanel from "@/components/dashboard/AIBlockPanel";
+import PdfDownloadButton from "@/components/dashboard/PdfDownloadButton";
 
 // Splits AI bullet output (one per line) into clean bullet strings.
 function splitBullets(text: string): string[] {
@@ -212,6 +213,7 @@ export default function ResumeEditor({
               ) : null}
             </>
           )}
+          <PdfDownloadButton data={data} fileBase={title} variant="outline" />
           <button
             onClick={save}
             disabled={saving || !dirty}

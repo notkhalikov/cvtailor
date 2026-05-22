@@ -22,13 +22,20 @@ const Inner = dynamic(
 export default function PdfPreview({
   data,
   fileBase,
+  photo = null,
   height = 640,
 }: {
   data: ResumeData;
   fileBase: string;
+  photo?: string | null;
   height?: number;
 }) {
-  const [design, setDesign] = useState<Design>(DEFAULT_DESIGN);
+  const [design, setDesign] = useState<Design>({ ...DEFAULT_DESIGN, photo });
+
+  // Keep the design photo in sync with the resume's photo (the single source).
+  useEffect(() => {
+    setDesign((d) => (d.photo === photo ? d : { ...d, photo }));
+  }, [photo]);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 

@@ -32,6 +32,7 @@ model Resume {
   originalText String?  @db.Text
   data         Json?
   originalData Json? // snapshot of the first machine parse, for "revert to source"
+  photo        String? @db.Text // optional photo as data URL, used in 2-column PDF templates
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

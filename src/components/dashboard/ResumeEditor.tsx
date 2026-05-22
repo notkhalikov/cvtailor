@@ -76,15 +76,33 @@ export default function ResumeEditor({
   title: initialTitle,
   initialData,
   originalData,
+  initialPhoto,
 }: {
   id: string;
   title: string;
   initialData: ResumeData;
   originalData: ResumeData | null;
+  initialPhoto: string | null;
 }) {
   const [title, setTitle] = useState(initialTitle);
   const [data, setData] = useState<ResumeData>(initialData);
+  const [photo, setPhoto] = useState<string | null>(initialPhoto);
+  const photoRef = useRef<HTMLInputElement>(null);
   const [dirty, setDirty] = useState(false);
+
+  function onPhotoFile(file: File) {
+    if (!file.type.startsWith("image/")) return;
+    if (file.size > 2 * 1024 * 1024) {
+      setError("Фото больше 2 МБ.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPhoto(String(reader.result));
+      setDirty(true);
+    };
+    reader.readAsDataURL(file);
+  }
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [error, setError] = useState("");
@@ -149,7 +167,7 @@ export default function ResumeEditor({
       const res = await fetch(`/api/resumes/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, data }),
+        body: JSON.stringify({ title, data, photo }),
       });
       if (!res.ok) {
         const b = await res.json().catch(() => null);
@@ -238,24 +256,75 @@ export default function ResumeEditor({
       <div className="mt-8 flex flex-col gap-8">
         {/* Identity */}
         <Block title="Шапка">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="flex flex-col gap-1.5">
-              <Label>Имя</Label>
+          <div className="flex items-start gap-4">
+            {/* Photo */}
+            <div className="flex shrink-0 flex-col items-center gap-2">
+              {photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={photo}
+                  alt=""
+                  className="h-20 w-20 rounded-xl object-cover"
+                />
+              ) : (
+                <div className="flex h-20 w-20 items-center justify-center rounded-xl border border-dashed border-zinc-800 text-2xl text-zinc-600">
+                  +
+                </div>
+              )}
               <input
-                className={inputCls}
-                value={data.fullName}
-                onChange={(e) => patch({ fullName: e.target.value })}
+                ref={photoRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) onPhotoFile(f);
+                  if (photoRef.current) photoRef.current.value = "";
+                }}
               />
+              <div className="flex flex-col items-center gap-0.5">
+                <button
+                  onClick={() => photoRef.current?.click()}
+                  className="font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-400 transition-colors hover:text-emerald-400"
+                >
+                  {photo ? "заменить" : "фото"}
+                </button>
+                {photo && (
+                  <button
+                    onClick={() => {
+                      setPhoto(null);
+                      setDirty(true);
+                    }}
+                    className="font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-600 transition-colors hover:text-rose-400"
+                  >
+                    убрать
+                  </button>
+                )}
+              </div>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <Label>Должность</Label>
-              <input
-                className={inputCls}
-                value={data.title}
-                onChange={(e) => patch({ title: e.target.value })}
-              />
+
+            <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="flex flex-col gap-1.5">
+                <Label>Имя</Label>
+                <input
+                  className={inputCls}
+                  value={data.fullName}
+                  onChange={(e) => patch({ fullName: e.target.value })}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label>Должность</Label>
+                <input
+                  className={inputCls}
+                  value={data.title}
+                  onChange={(e) => patch({ title: e.target.value })}
+                />
+              </div>
             </div>
           </div>
+          <p className="mt-2 font-mono text-[10px] text-zinc-500">
+            фото используется в 2-колоночных PDF-шаблонах (Sidebar, Creative)
+          </p>
         </Block>
 
         {/* Summary */}
@@ -492,7 +561,7 @@ export default function ResumeEditor({
           </div>
         </Block>
 
-        <PdfPreview data={data} fileBase={title} />
+        <PdfPreview data={data} fileBase={title} photo={photo} />
       </div>
     </section>
   );

@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef } from "react";
 import { TEMPLATES, ACCENTS, type Design } from "@/lib/pdf/design";
 
 function Toggle({
@@ -41,16 +40,7 @@ export default function DesignPicker({
   design: Design;
   onChange: (d: Design) => void;
 }) {
-  const photoRef = useRef<HTMLInputElement>(null);
   const ats = !!design.atsMode;
-
-  function onPhotoFile(file: File) {
-    if (!file.type.startsWith("image/")) return;
-    if (file.size > 2 * 1024 * 1024) return; // 2MB guard
-    const reader = new FileReader();
-    reader.onload = () => onChange({ ...design, photo: String(reader.result) });
-    reader.readAsDataURL(file);
-  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -105,52 +95,6 @@ export default function DesignPicker({
               />
             );
           })}
-        </div>
-      </div>
-
-      {/* Photo */}
-      <div className="flex flex-col gap-2">
-        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-500">
-          фото · для 2-колоночных шаблонов
-        </span>
-        <div className="flex items-center gap-3">
-          {design.photo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={design.photo}
-              alt=""
-              className="h-12 w-12 rounded-lg object-cover"
-            />
-          ) : (
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-dashed border-zinc-800 text-zinc-600">
-              <span className="text-lg">+</span>
-            </div>
-          )}
-          <input
-            ref={photoRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) onPhotoFile(f);
-              if (photoRef.current) photoRef.current.value = "";
-            }}
-          />
-          <button
-            onClick={() => photoRef.current?.click()}
-            className="rounded-lg border border-zinc-800 px-3 py-1.5 text-xs text-zinc-300 transition-colors hover:border-emerald-500/40 hover:text-emerald-400"
-          >
-            {design.photo ? "Заменить" : "Загрузить фото"}
-          </button>
-          {design.photo && (
-            <button
-              onClick={() => onChange({ ...design, photo: null })}
-              className="text-xs text-zinc-500 transition-colors hover:text-rose-400"
-            >
-              Убрать
-            </button>
-          )}
         </div>
       </div>
 

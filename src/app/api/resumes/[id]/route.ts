@@ -15,7 +15,7 @@ export async function PUT(
     return NextResponse.json({ error: "Не авторизованы." }, { status: 401 });
   }
 
-  let body: { title?: string; data?: ResumeData };
+  let body: { title?: string; data?: ResumeData; photo?: string | null };
   try {
     body = await req.json();
   } catch {
@@ -29,6 +29,7 @@ export async function PUT(
         ? { title: body.title.trim().slice(0, 120) }
         : {}),
       ...(body.data ? { data: body.data } : {}),
+      ...(body.photo !== undefined ? { photo: body.photo } : {}),
     },
   });
 

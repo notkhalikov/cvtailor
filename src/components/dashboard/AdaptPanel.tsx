@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ResumeData } from "@/lib/resume-schema";
-import PdfPreview from "@/components/dashboard/PdfPreview";
 
 export default function AdaptPanel({
   id,
@@ -88,8 +87,6 @@ export default function AdaptPanel({
       )}
 
       {adapted && <AdaptedView data={adapted} />}
-
-      {adapted && <PdfPreview data={adapted} fileBase="Адаптированное резюме" />}
     </div>
   );
 }

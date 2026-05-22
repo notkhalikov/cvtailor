@@ -7,6 +7,7 @@ import type { ResumeData } from "@/lib/resume-schema";
 import AdaptPanel from "@/components/dashboard/AdaptPanel";
 import MatchPanel from "@/components/dashboard/MatchPanel";
 import VersionsPanel from "@/components/dashboard/VersionsPanel";
+import PdfPreview from "@/components/dashboard/PdfPreview";
 
 export const dynamic = "force-dynamic";
 
@@ -46,7 +47,7 @@ export default async function AdaptationPage({
           matchScore: true,
           gaps: true,
           updatedAt: true,
-          resume: { select: { data: true } },
+          resume: { select: { data: true, photo: true } },
           versions: {
             orderBy: { createdAt: "desc" },
             select: { id: true, matchScore: true, createdAt: true },
@@ -95,6 +96,16 @@ export default async function AdaptationPage({
         <p className="mt-4 max-w-[70ch] text-sm leading-relaxed text-zinc-400">
           {job.summary}
         </p>
+      )}
+
+      {adapted && (
+        <div className="mt-8">
+          <PdfPreview
+            data={adapted}
+            fileBase="Адаптированное резюме"
+            photo={adaptation.resume.photo}
+          />
+        </div>
       )}
 
       {job && (

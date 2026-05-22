@@ -26,7 +26,12 @@ export async function POST(
 
   const adaptation = await prisma.adaptation.findFirst({
     where: { id: params.id, userId: user.id },
-    select: { id: true, jobData: true, resume: { select: { data: true } } },
+    select: {
+      id: true,
+      jobData: true,
+      matchScore: true,
+      resume: { select: { data: true } },
+    },
   });
   if (!adaptation) {
     return NextResponse.json({ error: "Адаптация не найдена." }, { status: 404 });
@@ -49,10 +54,20 @@ export async function POST(
 
   try {
     const adaptedData = await adaptResume(resumeData, jobData);
-    await prisma.adaptation.update({
-      where: { id: adaptation.id },
-      data: { adaptedData },
-    });
+    // Save the result as the current version and snapshot it into history.
+    await prisma.$transaction([
+      prisma.adaptation.update({
+        where: { id: adaptation.id },
+        data: { adaptedData },
+      }),
+      prisma.adaptationVersion.create({
+        data: {
+          adaptationId: adaptation.id,
+          data: adaptedData,
+          matchScore: adaptation.matchScore,
+        },
+      }),
+    ]);
     return NextResponse.json({ adaptedData });
   } catch (err) {
     console.error("[adaptations/adapt] failed:", err);

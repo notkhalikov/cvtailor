@@ -57,9 +57,24 @@ model Adaptation {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  resume Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  user     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resume   Resume              @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  versions AdaptationVersion[]
 
   @@index([userId])
   @@index([resumeId])
+}
+
+/// A saved snapshot of an adapted resume — one per AI adaptation run, so the
+/// user can review history and restore an earlier version.
+model AdaptationVersion {
+  id           String   @id @default(cuid())
+  adaptationId String
+  data         Json
+  matchScore   Int?
+  createdAt    DateTime @default(now())
+
+  adaptation Adaptation @relation(fields: [adaptationId], references: [id], onDelete: Cascade)
+
+  @@index([adaptationId])
 }

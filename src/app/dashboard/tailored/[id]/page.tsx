@@ -6,6 +6,7 @@ import type { JobData, MatchAnalysis } from "@/lib/job-schema";
 import type { ResumeData } from "@/lib/resume-schema";
 import AdaptPanel from "@/components/dashboard/AdaptPanel";
 import MatchPanel from "@/components/dashboard/MatchPanel";
+import VersionsPanel from "@/components/dashboard/VersionsPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +45,12 @@ export default async function AdaptationPage({
           adaptedData: true,
           matchScore: true,
           gaps: true,
+          updatedAt: true,
           resume: { select: { data: true } },
+          versions: {
+            orderBy: { createdAt: "desc" },
+            select: { id: true, matchScore: true, createdAt: true },
+          },
         },
       })
     : null;
@@ -124,9 +130,19 @@ export default async function AdaptationPage({
       />
 
       <AdaptPanel
+        key={adaptation.updatedAt.toISOString()}
         id={adaptation.id}
         initialAdapted={adapted}
         resumeReady={resumeReady}
+      />
+
+      <VersionsPanel
+        id={adaptation.id}
+        versions={adaptation.versions.map((v) => ({
+          id: v.id,
+          matchScore: v.matchScore,
+          createdAt: v.createdAt.toISOString(),
+        }))}
       />
     </section>
   );

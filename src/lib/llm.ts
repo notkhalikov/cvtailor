@@ -4,7 +4,12 @@ import type {
   ResumeExperience,
   ResumeEducation,
 } from "@/lib/resume-schema";
-import type { JobData } from "@/lib/job-schema";
+import type {
+  JobData,
+  MatchAnalysis,
+  MatchGap,
+  GapSeverity,
+} from "@/lib/job-schema";
 
 // Google Gemini — free tier. Reads GEMINI_API_KEY from the environment.
 const MODEL = "gemini-2.5-flash";
@@ -214,6 +219,90 @@ ${JSON.stringify(job)}
   const out = res.text;
   if (!out) throw new Error("Модель вернула пустой ответ.");
   return normalize(extractJson(out));
+}
+
+// ─── Match score + gap analysis ──────────────────────────────────
+
+const ANALYZE_SYSTEM_PROMPT = `Ты — рекрутер-аналитик сервиса CV Tailor. Тебе дают резюме кандидата (JSON) и вакансию (JSON). Оцени соответствие.
+
+Верни СТРОГО один JSON-объект без markdown:
+{
+  "score": number,           // 0-100, насколько резюме соответствует вакансии
+  "verdict": string,         // 1-2 предложения общий вывод
+  "strengths": string[],     // что хорошо совпадает
+  "gaps": [                  // чего не хватает или что слабо
+    { "title": string, "severity": "high"|"medium"|"low", "suggestion": string }
+  ]
+}
+
+Правила:
+- score честный: 100 — идеальное совпадение, ниже — если не закрыты ключевые требования.
+- gaps.severity: high — критичное обязательное требование не закрыто; medium — важное; low — желательное.
+- suggestion — короткий конкретный совет, что добавить/усилить (без выдумывания фактов за кандидата).
+- Язык — как в резюме/вакансии (русский, если они на русском).`;
+
+function clampScore(v: unknown): number {
+  const n = typeof v === "number" ? v : Number(v);
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
+
+function normalizeAnalysis(raw: unknown): {
+  score: number;
+  analysis: MatchAnalysis;
+} {
+  const o = (raw ?? {}) as Record<string, unknown>;
+  const gaps: MatchGap[] = Array.isArray(o.gaps)
+    ? (o.gaps as unknown[]).map((g) => {
+        const x = (g ?? {}) as Record<string, unknown>;
+        const sev = str(x.severity).toLowerCase();
+        const severity: GapSeverity =
+          sev === "high" || sev === "medium" || sev === "low"
+            ? (sev as GapSeverity)
+            : "medium";
+        return {
+          title: str(x.title),
+          severity,
+          suggestion: str(x.suggestion),
+        };
+      }).filter((g) => g.title !== "")
+    : [];
+  return {
+    score: clampScore(o.score),
+    analysis: {
+      verdict: str(o.verdict),
+      strengths: strArray(o.strengths),
+      gaps,
+    },
+  };
+}
+
+/**
+ * Scores a resume against a job posting and lists gaps/strengths.
+ */
+export async function analyzeMatch(
+  resume: ResumeData,
+  job: JobData,
+): Promise<{ score: number; analysis: MatchAnalysis }> {
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  const res = await ai.models.generateContent({
+    model: MODEL,
+    contents: `РЕЗЮМЕ (JSON):
+${JSON.stringify(resume)}
+
+ВАКАНСИЯ (JSON):
+${JSON.stringify(job)}
+
+Оцени соответствие и верни JSON.`,
+    config: {
+      systemInstruction: ANALYZE_SYSTEM_PROMPT,
+      responseMimeType: "application/json",
+      temperature: 0,
+    },
+  });
+  const out = res.text;
+  if (!out) throw new Error("Модель вернула пустой ответ.");
+  return normalizeAnalysis(extractJson(out));
 }
 
 // ─── Block-level AI editing (streaming) ──────────────────────────

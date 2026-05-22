@@ -2,9 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getOrCreateUser } from "@/lib/user";
 import { prisma } from "@/lib/prisma";
-import type { JobData } from "@/lib/job-schema";
+import type { JobData, MatchAnalysis } from "@/lib/job-schema";
 import type { ResumeData } from "@/lib/resume-schema";
 import AdaptPanel from "@/components/dashboard/AdaptPanel";
+import MatchPanel from "@/components/dashboard/MatchPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +42,8 @@ export default async function AdaptationPage({
           title: true,
           jobData: true,
           adaptedData: true,
+          matchScore: true,
+          gaps: true,
           resume: { select: { data: true } },
         },
       })
@@ -50,6 +53,7 @@ export default async function AdaptationPage({
 
   const job = (adaptation.jobData as JobData | null) ?? null;
   const adapted = (adaptation.adaptedData as ResumeData | null) ?? null;
+  const analysis = (adaptation.gaps as MatchAnalysis | null) ?? null;
   const resumeReady = !!adaptation.resume.data;
 
   return (
@@ -111,6 +115,13 @@ export default async function AdaptationPage({
           )}
         </div>
       )}
+
+      <MatchPanel
+        id={adaptation.id}
+        initialScore={adaptation.matchScore}
+        initialAnalysis={analysis}
+        resumeReady={resumeReady}
+      />
 
       <AdaptPanel
         id={adaptation.id}

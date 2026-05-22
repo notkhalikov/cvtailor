@@ -13,7 +13,13 @@ export default async function TailoredPage() {
         prisma.adaptation.findMany({
           where: { userId: user.id },
           orderBy: { createdAt: "desc" },
-          select: { id: true, title: true, matchScore: true, createdAt: true },
+          select: {
+            id: true,
+            title: true,
+            matchScore: true,
+            createdAt: true,
+            _count: { select: { versions: true } },
+          },
         }),
       ])
     : [0, []];
@@ -23,6 +29,7 @@ export default async function TailoredPage() {
     title: a.title,
     matchScore: a.matchScore,
     createdAt: a.createdAt.toISOString(),
+    adapted: a._count.versions > 0,
   }));
 
   return (

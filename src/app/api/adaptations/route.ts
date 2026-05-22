@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { getOrCreateUser } from "@/lib/user";
 import { prisma } from "@/lib/prisma";
-import { parseJobText } from "@/lib/llm";
+import { parseJobText, analyzeMatch } from "@/lib/llm";
+import type { ResumeData } from "@/lib/resume-schema";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,12 +39,12 @@ export async function POST(req: Request) {
   const resume = body.resumeId
     ? await prisma.resume.findFirst({
         where: { id: body.resumeId, userId: user.id },
-        select: { id: true },
+        select: { id: true, data: true },
       })
     : await prisma.resume.findFirst({
         where: { userId: user.id },
         orderBy: { createdAt: "desc" },
-        select: { id: true },
+        select: { id: true, data: true },
       });
   if (!resume) {
     return NextResponse.json(
@@ -77,6 +78,21 @@ export async function POST(req: Request) {
     [jobData.jobTitle, jobData.company].filter(Boolean).join(" · ") ||
     "Адаптация";
 
+  // Auto-score the master resume against the JD right away (best-effort, so a
+  // scoring hiccup never blocks creating the adaptation).
+  const resumeData = resume.data as ResumeData | null;
+  let matchScore: number | null = null;
+  let gaps: object | null = null;
+  if (resumeData) {
+    try {
+      const r = await analyzeMatch(resumeData, jobData);
+      matchScore = r.score;
+      gaps = r.analysis;
+    } catch (err) {
+      console.error("[adaptations] auto-score failed:", err);
+    }
+  }
+
   const adaptation = await prisma.adaptation.create({
     data: {
       userId: user.id,
@@ -84,8 +100,10 @@ export async function POST(req: Request) {
       title: title.slice(0, 120),
       jobText,
       jobData,
+      matchScore,
+      ...(gaps ? { gaps } : {}),
     },
-    select: { id: true, title: true, createdAt: true },
+    select: { id: true, title: true, createdAt: true, matchScore: true },
   });
 
   return NextResponse.json({ adaptation }, { status: 201 });

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { ResumeData } from "@/lib/resume-schema";
 
 export default function AdaptPanel({
@@ -13,6 +14,7 @@ export default function AdaptPanel({
   initialAdapted: ResumeData | null;
   resumeReady: boolean;
 }) {
+  const router = useRouter();
   const [adapted, setAdapted] = useState<ResumeData | null>(initialAdapted);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState("");
@@ -30,6 +32,8 @@ export default function AdaptPanel({
         return;
       }
       setAdapted(body.adaptedData);
+      // Refresh server data so the match score / versions reflect the rewrite.
+      router.refresh();
     } catch {
       setError("Сеть недоступна. Попробуйте позже.");
     } finally {

@@ -96,7 +96,7 @@ export default function TailoredManager({
         return;
       }
       setItems((prev) => [
-        { ...body.adaptation, matchScore: null, adapted: false },
+        { ...body.adaptation, matchScore: body.adaptation.matchScore ?? null, adapted: false },
         ...prev,
       ]);
       setJobText("");
@@ -125,7 +125,15 @@ export default function TailoredManager({
         return;
       }
       setItems((prev) =>
-        prev.map((it) => (it.id === id ? { ...it, adapted: true } : it)),
+        prev.map((it) =>
+          it.id === id
+            ? {
+                ...it,
+                adapted: true,
+                matchScore: body?.matchScore ?? it.matchScore,
+              }
+            : it,
+        ),
       );
     } catch {
       setRowError((p) => ({ ...p, [id]: "Сеть недоступна." }));

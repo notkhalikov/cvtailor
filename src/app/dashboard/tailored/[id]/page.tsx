@@ -123,6 +123,7 @@ export default async function AdaptationPage({
       )}
 
       <MatchPanel
+        key={adaptation.updatedAt.toISOString()}
         id={adaptation.id}
         initialScore={adaptation.matchScore}
         initialAnalysis={analysis}

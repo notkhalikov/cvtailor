@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getOrCreateUser } from "@/lib/user";
 import { prisma } from "@/lib/prisma";
-import { adaptResume } from "@/lib/llm";
+import { adaptResume, analyzeMatch } from "@/lib/llm";
 import type { ResumeData } from "@/lib/resume-schema";
 import type { JobData } from "@/lib/job-schema";
 
@@ -54,21 +54,34 @@ export async function POST(
 
   try {
     const adaptedData = await adaptResume(resumeData, jobData);
+
+    // Re-score against the JD so the new version's match reflects the rewrite
+    // (best-effort: keep the previous score if scoring hiccups).
+    let matchScore = adaptation.matchScore;
+    let gaps: object | null = null;
+    try {
+      const r = await analyzeMatch(adaptedData, jobData);
+      matchScore = r.score;
+      gaps = r.analysis;
+    } catch (err) {
+      console.error("[adaptations/adapt] re-score failed:", err);
+    }
+
     // Save the result as the current version and snapshot it into history.
     await prisma.$transaction([
       prisma.adaptation.update({
         where: { id: adaptation.id },
-        data: { adaptedData },
+        data: { adaptedData, matchScore, ...(gaps ? { gaps } : {}) },
       }),
       prisma.adaptationVersion.create({
         data: {
           adaptationId: adaptation.id,
           data: adaptedData,
-          matchScore: adaptation.matchScore,
+          matchScore,
         },
       }),
     ]);
-    return NextResponse.json({ adaptedData });
+    return NextResponse.json({ adaptedData, matchScore });
   } catch (err) {
     console.error("[adaptations/adapt] failed:", err);
     const msg = err instanceof Error ? err.message : "";

@@ -6,20 +6,32 @@ export const dynamic = "force-dynamic";
 
 export default async function ApplicationsPage() {
   const user = await getOrCreateUser();
-  const apps = user
-    ? await prisma.application.findMany({
-        where: { userId: user.id },
-        orderBy: { createdAt: "desc" },
-        select: {
-          id: true,
-          company: true,
-          role: true,
-          link: true,
-          stage: true,
-          createdAt: true,
-        },
-      })
-    : [];
+  const [apps, adaptations] = user
+    ? await Promise.all([
+        prisma.application.findMany({
+          where: { userId: user.id },
+          orderBy: { createdAt: "desc" },
+          select: {
+            id: true,
+            company: true,
+            role: true,
+            link: true,
+            stage: true,
+            notes: true,
+            contactName: true,
+            contactInfo: true,
+            adaptationId: true,
+            adaptation: { select: { title: true } },
+            createdAt: true,
+          },
+        }),
+        prisma.adaptation.findMany({
+          where: { userId: user.id },
+          orderBy: { createdAt: "desc" },
+          select: { id: true, title: true },
+        }),
+      ])
+    : [[], []];
 
   const initial = apps.map((a) => ({
     id: a.id,
@@ -27,6 +39,11 @@ export default async function ApplicationsPage() {
     role: a.role,
     link: a.link,
     stage: a.stage,
+    notes: a.notes,
+    contactName: a.contactName,
+    contactInfo: a.contactInfo,
+    adaptationId: a.adaptationId,
+    adaptationTitle: a.adaptation?.title ?? null,
     createdAt: a.createdAt.toISOString(),
   }));
 
@@ -46,7 +63,7 @@ export default async function ApplicationsPage() {
       </div>
 
       <div className="mt-8">
-        <ApplicationsBoard initial={initial} />
+        <ApplicationsBoard initial={initial} adaptations={adaptations} />
       </div>
     </section>
   );

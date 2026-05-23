@@ -23,11 +23,26 @@ export async function PATCH(
     notes?: string | null;
     contactName?: string | null;
     contactInfo?: string | null;
+    adaptationId?: string | null;
   };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Некорректный JSON." }, { status: 400 });
+  }
+
+  // Only allow linking an adaptation the user owns; otherwise clear it.
+  let adaptationId: string | null | undefined = undefined;
+  if (body.adaptationId !== undefined) {
+    if (!body.adaptationId) {
+      adaptationId = null;
+    } else {
+      const owned = await prisma.adaptation.findFirst({
+        where: { id: body.adaptationId, userId: user.id },
+        select: { id: true },
+      });
+      adaptationId = owned ? owned.id : null;
+    }
   }
 
   const result = await prisma.application.updateMany({
@@ -48,6 +63,7 @@ export async function PATCH(
       ...(body.contactInfo !== undefined
         ? { contactInfo: body.contactInfo }
         : {}),
+      ...(adaptationId !== undefined ? { adaptationId } : {}),
     },
   });
 

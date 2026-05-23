@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getOrCreateUser } from "@/lib/user";
 import { prisma } from "@/lib/prisma";
+import { sendEmail, emails } from "@/lib/resend";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,5 +22,12 @@ export async function POST(req: Request) {
 
   const plan = body.plan === "pro" ? "pro" : "free";
   await prisma.user.update({ where: { id: user.id }, data: { plan } });
+
+  // Notify on upgrade (best-effort).
+  if (plan === "pro" && user.plan !== "pro") {
+    const { subject, html } = emails.proActivated();
+    await sendEmail({ to: user.email, subject, html });
+  }
+
   return NextResponse.json({ plan });
 }

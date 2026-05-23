@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getOrCreateUser } from "@/lib/user";
 import { prisma } from "@/lib/prisma";
+import { sendEmail, emails } from "@/lib/resend";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,6 +17,8 @@ export async function POST() {
       where: { id: user.id },
       data: { onboardedAt: new Date() },
     });
+    const { subject, html } = emails.welcome(user.email.split("@")[0]);
+    await sendEmail({ to: user.email, subject, html });
   }
 
   return NextResponse.json({ ok: true });

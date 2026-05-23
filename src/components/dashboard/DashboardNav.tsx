@@ -69,7 +69,7 @@ function GearIcon({ className }: IconProps) {
 const NAV = [
   { href: "/dashboard", label: "Резюме", Icon: FileIcon, soon: false },
   { href: "/dashboard/tailored", label: "Адаптации", Icon: TargetIcon, soon: false },
-  { href: "/dashboard/applications", label: "Отклики", Icon: ColumnsIcon, soon: true },
+  { href: "/dashboard/applications", label: "Отклики", Icon: ColumnsIcon, soon: false },
   { href: "/dashboard/settings", label: "Настройки", Icon: GearIcon, soon: false },
 ];
 

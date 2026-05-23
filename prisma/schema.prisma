@@ -20,8 +20,9 @@ model User {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  resumes     Resume[]
-  adaptations Adaptation[]
+  resumes      Resume[]
+  adaptations  Adaptation[]
+  applications Application[]
 }
 
 /// A master resume uploaded by the user. `data` holds the parsed,
@@ -59,12 +60,34 @@ model Adaptation {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  resume   Resume              @relation(fields: [resumeId], references: [id], onDelete: Cascade)
-  versions AdaptationVersion[]
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resume       Resume              @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  versions     AdaptationVersion[]
+  applications Application[]
 
   @@index([userId])
   @@index([resumeId])
+}
+
+/// A job application tracked on the kanban board.
+model Application {
+  id           String   @id @default(cuid())
+  userId       String
+  company      String   @default("")
+  role         String   @default("")
+  link         String?
+  stage        String   @default("wishlist") // wishlist|applied|interview|offer|rejected
+  notes        String?  @db.Text
+  contactName  String?
+  contactInfo  String?
+  adaptationId String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  adaptation Adaptation? @relation(fields: [adaptationId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
 }
 
 /// A saved snapshot of an adapted resume — one per AI adaptation run, so the

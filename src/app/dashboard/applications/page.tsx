@@ -23,6 +23,7 @@ export default async function ApplicationsPage() {
             adaptationId: true,
             adaptation: { select: { title: true } },
             createdAt: true,
+            updatedAt: true,
           },
         }),
         prisma.adaptation.findMany({
@@ -45,6 +46,7 @@ export default async function ApplicationsPage() {
     adaptationId: a.adaptationId,
     adaptationTitle: a.adaptation?.title ?? null,
     createdAt: a.createdAt.toISOString(),
+    updatedAt: a.updatedAt.toISOString(),
   }));
 
   return (

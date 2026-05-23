@@ -15,9 +15,18 @@ export type AppItem = {
   adaptationId: string | null;
   adaptationTitle: string | null;
   createdAt: string;
+  updatedAt: string;
 };
 
 type AdaptationRef = { id: string; title: string };
+
+const STALE_DAYS = 14;
+const STALE_STAGES = ["applied", "interview"];
+
+function isStale(it: AppItem): boolean {
+  if (!STALE_STAGES.includes(it.stage)) return false;
+  return Date.now() - Date.parse(it.updatedAt) > STALE_DAYS * 86_400_000;
+}
 
 function XIcon({ className }: { className?: string }) {
   return (
@@ -74,6 +83,7 @@ export default function ApplicationsBoard({
           contactInfo: null,
           adaptationId: null,
           adaptationTitle: null,
+          updatedAt: body.application.createdAt,
         },
         ...p,
       ]);
@@ -87,7 +97,10 @@ export default function ApplicationsBoard({
 
   async function move(id: string, stage: StageId) {
     const prev = items;
-    setItems((p) => p.map((it) => (it.id === id ? { ...it, stage } : it)));
+    const now = new Date().toISOString();
+    setItems((p) =>
+      p.map((it) => (it.id === id ? { ...it, stage, updatedAt: now } : it)),
+    );
     try {
       const res = await fetch(`/api/applications/${id}`, {
         method: "PATCH",
@@ -104,7 +117,7 @@ export default function ApplicationsBoard({
     const prev = items;
     const adaptationTitle =
       adaptations.find((a) => a.id === patch.adaptationId)?.title ?? null;
-    const next = { ...patch, adaptationTitle };
+    const next = { ...patch, adaptationTitle, updatedAt: new Date().toISOString() };
     setItems((p) => p.map((it) => (it.id === patch.id ? next : it)));
     setEditing(null);
     try {
@@ -179,6 +192,44 @@ export default function ApplicationsBoard({
           + Добавить отклик
         </button>
       )}
+
+      {/* Stats */}
+      {items.length > 0 &&
+        (() => {
+          const sent = items.filter((i) =>
+            ["applied", "interview", "offer", "rejected"].includes(i.stage),
+          ).length;
+          const reached = items.filter((i) =>
+            ["interview", "offer"].includes(i.stage),
+          ).length;
+          const offers = items.filter((i) => i.stage === "offer").length;
+          const pct = (n: number, d: number) => (d ? Math.round((n / d) * 100) : 0);
+          const stale = items.filter(isStale).length;
+          const Stat = ({ v, l }: { v: string; l: string }) => (
+            <div className="flex flex-col">
+              <span className="font-mono text-lg text-zinc-50">{v}</span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-500">
+                {l}
+              </span>
+            </div>
+          );
+          return (
+            <div className="flex flex-wrap items-center gap-x-8 gap-y-3 rounded-2xl border border-zinc-800 px-5 py-4">
+              <Stat v={String(items.length)} l="всего" />
+              <Stat v={String(sent)} l="отправлено" />
+              <Stat v={`${pct(reached, sent)}%`} l="до интервью" />
+              <Stat v={`${pct(offers, sent)}%`} l="офферы" />
+              {stale > 0 && (
+                <div className="ml-auto flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/[0.06] px-3 py-1.5">
+                  <span className="text-sm text-amber-400">⏰</span>
+                  <span className="text-sm text-zinc-300">
+                    {stale} без ответа &gt; 2 недель
+                  </span>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
       {/* Board */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
@@ -273,6 +324,11 @@ export default function ApplicationsBoard({
                     {(c.notes || c.contactName || c.contactInfo) && (
                       <span className="font-mono text-[9px] text-zinc-600">
                         заметки
+                      </span>
+                    )}
+                    {isStale(c) && (
+                      <span className="rounded bg-amber-500/15 px-1.5 py-0.5 font-mono text-[9px] text-amber-400">
+                        ⏰ нет ответа
                       </span>
                     )}
                   </div>

@@ -76,17 +76,29 @@ function ScoreRing({ score }: { score: number | null }) {
   );
 }
 
+type Usage = {
+  plan: string;
+  used: number;
+  limit: number | null;
+  remaining: number | null;
+};
+
 export default function TailoredManager({
   hasResume,
   initial,
+  usage,
 }: {
   hasResume: boolean;
   initial: AdaptationItem[];
+  usage: Usage;
 }) {
   const [items, setItems] = useState<AdaptationItem[]>(initial);
+  const [remaining, setRemaining] = useState<number | null>(usage.remaining);
   const [jobText, setJobText] = useState("");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
+
+  const limitReached = remaining !== null && remaining <= 0;
   const [adaptingId, setAdaptingId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [rowError, setRowError] = useState<Record<string, string>>({});
@@ -137,6 +149,7 @@ export default function TailoredManager({
         { ...body.adaptation, matchScore: body.adaptation.matchScore ?? null, adapted: false },
         ...prev,
       ]);
+      setRemaining((r) => (r === null ? null : Math.max(0, r - 1)));
       setJobText("");
     } catch {
       setError("Сеть недоступна. Попробуйте позже.");
@@ -200,9 +213,16 @@ export default function TailoredManager({
     <div className="mt-8 flex flex-col gap-6">
       {/* New adaptation */}
       <div className="flex flex-col gap-3 rounded-2xl border border-zinc-800 p-5">
-        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-500">
-          новая адаптация
-        </span>
+        <div className="flex items-center justify-between">
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-500">
+            новая адаптация
+          </span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-500">
+            {remaining === null
+              ? "Pro · безлимит"
+              : `осталось ${remaining} из ${usage.limit} в этом месяце`}
+          </span>
+        </div>
         <textarea
           value={jobText}
           onChange={(e) => setJobText(e.target.value)}
@@ -210,13 +230,28 @@ export default function TailoredManager({
           className="min-h-[140px] w-full resize-y rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-3 text-sm leading-relaxed text-zinc-50 placeholder:text-zinc-600 outline-none transition-colors focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
         />
         {error && <p className="text-sm text-rose-400">{error}</p>}
-        <button
-          onClick={create}
-          disabled={creating}
-          className="w-fit rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-zinc-950 transition-all hover:bg-emerald-400 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {creating ? "Разбираем вакансию…" : "Разобрать вакансию"}
-        </button>
+        {limitReached ? (
+          <div className="flex flex-col gap-2 rounded-xl border border-amber-500/30 bg-amber-500/[0.06] p-4">
+            <p className="text-sm text-zinc-200">
+              Лимит бесплатного тарифа исчерпан ({usage.limit} адаптации в
+              месяц).
+            </p>
+            <a
+              href="/pricing"
+              className="w-fit rounded-xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-zinc-950 transition-all hover:bg-emerald-400 active:scale-[0.98]"
+            >
+              Перейти на Pro
+            </a>
+          </div>
+        ) : (
+          <button
+            onClick={create}
+            disabled={creating}
+            className="w-fit rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-zinc-950 transition-all hover:bg-emerald-400 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {creating ? "Разбираем вакансию…" : "Разобрать вакансию"}
+          </button>
+        )}
       </div>
 
       {/* List of adaptation tiles */}

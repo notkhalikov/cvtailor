@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getOrCreateUser } from "@/lib/user";
 import { prisma } from "@/lib/prisma";
 import { parseJobText, analyzeMatch } from "@/lib/llm";
+import { getUsage } from "@/lib/plan";
 import type { ResumeData } from "@/lib/resume-schema";
 
 export const runtime = "nodejs";
@@ -17,6 +18,18 @@ export async function POST(req: Request) {
     return NextResponse.json(
       { error: "ИИ-сервис не настроен (нет ключа GEMINI_API_KEY)." },
       { status: 503 },
+    );
+  }
+
+  // Enforce the free-plan monthly limit before doing any paid work.
+  const usage = await getUsage(user.id, user.plan);
+  if (usage.remaining !== null && usage.remaining <= 0) {
+    return NextResponse.json(
+      {
+        error: `На бесплатном тарифе ${usage.limit} адаптации в месяц. Лимит исчерпан — оформите Pro.`,
+        limitReached: true,
+      },
+      { status: 402 },
     );
   }
 

@@ -1,12 +1,17 @@
 import { currentUser } from "@clerk/nextjs/server";
+import { getOrCreateUser } from "@/lib/user";
+import { getUsage } from "@/lib/plan";
+import PlanControl from "@/components/dashboard/PlanControl";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
-  const user = await currentUser();
-  const email = user?.emailAddresses[0]?.emailAddress ?? "—";
+  const [clerk, dbUser] = await Promise.all([currentUser(), getOrCreateUser()]);
+  const email = clerk?.emailAddresses[0]?.emailAddress ?? "—";
   const name =
-    [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "—";
+    [clerk?.firstName, clerk?.lastName].filter(Boolean).join(" ") || "—";
+  const plan = dbUser?.plan ?? "free";
+  const usage = dbUser ? await getUsage(dbUser.id, plan) : null;
 
   return (
     <section className="mx-auto max-w-5xl px-6 py-10">
@@ -28,13 +33,19 @@ export default async function SettingsPage() {
           <dt className="text-sm text-zinc-400">Email</dt>
           <dd className="text-sm text-zinc-50">{email}</dd>
         </div>
-        <div className="flex items-center justify-between py-4">
-          <dt className="text-sm text-zinc-400">Тариф</dt>
-          <dd className="flex items-center gap-2 text-sm">
-            <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-emerald-400">
-              Free
-            </span>
-            <span className="text-zinc-500">3 адаптации / мес</span>
+        <div className="flex items-center justify-between gap-4 py-4">
+          <dt className="text-sm text-zinc-400">
+            Тариф
+            {usage && (
+              <span className="ml-2 font-mono text-xs text-zinc-600">
+                {usage.limit === null
+                  ? "безлимит"
+                  : `${usage.used} из ${usage.limit} в этом месяце`}
+              </span>
+            )}
+          </dt>
+          <dd>
+            <PlanControl plan={plan} />
           </dd>
         </div>
       </dl>

@@ -80,6 +80,12 @@ export default function Home() {
           CV<span className="text-emerald-400">·</span>Tailor
         </span>
         <nav className="flex items-center gap-2 text-sm">
+          <Link
+            href="/pricing"
+            className="rounded-lg px-4 py-2 text-zinc-400 transition-colors hover:text-zinc-50"
+          >
+            Тарифы
+          </Link>
           <SignedOut>
             <Link
               href="/sign-in"

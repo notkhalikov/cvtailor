@@ -209,8 +209,24 @@ export default function TailoredManager({
     );
   }
 
+  const lowQuota = remaining !== null && remaining > 0 && remaining <= 1;
+
   return (
     <div className="mt-8 flex flex-col gap-6">
+      {lowQuota && (
+        <div className="flex items-center justify-between gap-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.05] px-5 py-3">
+          <span className="text-sm text-zinc-300">
+            Осталась {remaining} адаптация в этом месяце. Pro — безлимит.
+          </span>
+          <Link
+            href="/pricing"
+            className="shrink-0 font-mono text-[11px] uppercase tracking-[0.12em] text-emerald-400 transition-colors hover:text-emerald-300"
+          >
+            тарифы →
+          </Link>
+        </div>
+      )}
+
       {/* New adaptation */}
       <div className="flex flex-col gap-3 rounded-2xl border border-zinc-800 p-5">
         <div className="flex items-center justify-between">

@@ -35,14 +35,17 @@ export default async function DashboardLayout({
           <DashboardNav />
         </div>
 
-        <div className="hidden border-t border-zinc-800 px-5 py-4 md:block">
+        <Link
+          href="/pricing"
+          className="hidden border-t border-zinc-800 px-5 py-4 transition-colors hover:bg-zinc-900/50 md:block"
+        >
           <div className="flex items-center gap-2">
             <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-emerald-400">
               Free
             </span>
-            <span className="text-xs text-zinc-500">3 адаптации / мес</span>
+            <span className="text-xs text-zinc-500">тарифы · Pro →</span>
           </div>
-        </div>
+        </Link>
       </aside>
 
       {/* ── Main ── */}

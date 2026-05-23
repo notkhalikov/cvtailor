@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { FREE_MONTHLY_LIMIT } from "@/lib/plan";
-import { PRO_PRICE_RUB, PLAN_FEATURES } from "@/lib/pricing";
+import { PRO_PRICE_USD, PLAN_FEATURES } from "@/lib/pricing";
 import UpgradeButton from "@/components/UpgradeButton";
 
 export const metadata: Metadata = {
@@ -54,7 +54,7 @@ export default function PricingPage() {
               <p className="mt-1 font-mono text-sm text-zinc-500">для старта</p>
             </div>
             <p className="text-3xl font-semibold tracking-tight">
-              0 ₽<span className="text-base font-normal text-zinc-500"> / мес</span>
+              $0<span className="text-base font-normal text-zinc-500"> / мес</span>
             </p>
             <ul className="flex flex-col gap-2">
               {PLAN_FEATURES.free.map((f) => (
@@ -86,7 +86,7 @@ export default function PricingPage() {
               </span>
             </div>
             <p className="text-3xl font-semibold tracking-tight">
-              {PRO_PRICE_RUB} ₽
+              ${PRO_PRICE_USD}
               <span className="text-base font-normal text-zinc-500"> / мес</span>
             </p>
             <ul className="flex flex-col gap-2">

@@ -1,6 +1,6 @@
 import { FREE_MONTHLY_LIMIT } from "@/lib/plan";
 
-export const PRO_PRICE_RUB = 490;
+export const PRO_PRICE_USD = 7.99;
 
 export const PLAN_FEATURES = {
   free: [

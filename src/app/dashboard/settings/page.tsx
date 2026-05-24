@@ -1,16 +1,19 @@
+import Link from "next/link";
 import { currentUser } from "@clerk/nextjs/server";
 import { getOrCreateUser } from "@/lib/user";
-import { getUsage } from "@/lib/plan";
-import PlanControl from "@/components/dashboard/PlanControl";
+import { getUsage, getPlan } from "@/lib/plan";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
-  const [clerk, dbUser] = await Promise.all([currentUser(), getOrCreateUser()]);
+  const [clerk, dbUser, plan] = await Promise.all([
+    currentUser(),
+    getOrCreateUser(),
+    getPlan(),
+  ]);
   const email = clerk?.emailAddresses[0]?.emailAddress ?? "—";
   const name =
     [clerk?.firstName, clerk?.lastName].filter(Boolean).join(" ") || "—";
-  const plan = dbUser?.plan ?? "free";
   const usage = dbUser ? await getUsage(dbUser.id, plan) : null;
 
   return (
@@ -44,8 +47,18 @@ export default async function SettingsPage() {
               </span>
             )}
           </dt>
-          <dd>
-            <PlanControl plan={plan} />
+          <dd className="flex items-center gap-3">
+            <span
+              className={`font-mono text-[11px] uppercase tracking-[0.12em] ${plan === "pro" ? "text-emerald-400" : "text-zinc-400"}`}
+            >
+              {plan === "pro" ? "Pro" : "Free"}
+            </span>
+            <Link
+              href="/pricing"
+              className="rounded-lg border border-zinc-800 px-3 py-1.5 text-xs text-zinc-300 transition-colors hover:border-emerald-500/40 hover:text-emerald-400"
+            >
+              {plan === "pro" ? "Управление" : "Перейти на Pro"}
+            </Link>
           </dd>
         </div>
       </dl>

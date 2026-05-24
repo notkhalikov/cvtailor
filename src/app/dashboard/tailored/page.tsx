@@ -1,6 +1,6 @@
 import { getOrCreateUser } from "@/lib/user";
 import { prisma } from "@/lib/prisma";
-import { getUsage } from "@/lib/plan";
+import { getUsage, getPlan } from "@/lib/plan";
 import TailoredManager from "@/components/dashboard/TailoredManager";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +26,7 @@ export default async function TailoredPage() {
     : [0, []];
 
   const usage = user
-    ? await getUsage(user.id, user.plan)
+    ? await getUsage(user.id, await getPlan())
     : { plan: "free", used: 0, limit: 3, remaining: 3 };
 
   const initial = adaptations.map((a) => ({

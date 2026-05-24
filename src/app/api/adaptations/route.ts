@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getOrCreateUser } from "@/lib/user";
 import { prisma } from "@/lib/prisma";
 import { parseJobText, analyzeMatch } from "@/lib/llm";
-import { getUsage } from "@/lib/plan";
+import { getUsage, getPlan } from "@/lib/plan";
 import type { ResumeData } from "@/lib/resume-schema";
 
 export const runtime = "nodejs";
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
   }
 
   // Enforce the free-plan monthly limit before doing any paid work.
-  const usage = await getUsage(user.id, user.plan);
+  const usage = await getUsage(user.id, await getPlan());
   if (usage.remaining !== null && usage.remaining <= 0) {
     return NextResponse.json(
       {
